@@ -11,7 +11,7 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['icon.svg'],
       workbox: {
-        globPatterns: ['**/*.{js,css,html,svg,png,woff2,webmanifest}'],
+        globPatterns: ['**/*.{js,css,html,svg,png,webp,woff2,webmanifest}'],
         cleanupOutdatedCaches: true,
         clientsClaim: true,
         skipWaiting: true,
@@ -21,7 +21,6 @@ export default defineConfig({
         short_name: 'unmasked',
         description: 'Guess the names of superheroes and villains from pictures.',
         display: 'standalone',
-        orientation: 'portrait',
         start_url: '/',
         scope: '/',
         theme_color: '#ffd400',

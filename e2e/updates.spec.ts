@@ -1,7 +1,7 @@
 import { execFileSync } from 'node:child_process';
-import { mkdtempSync, rmSync } from 'node:fs';
+import { existsSync, mkdtempSync, readFileSync, rmSync, statSync } from 'node:fs';
 import { createServer, type Server } from 'node:http';
-import { readFileSync, existsSync, statSync } from 'node:fs';
+
 import { tmpdir } from 'node:os';
 import { extname, join, normalize } from 'node:path';
 import { expect, test } from '@playwright/test';
@@ -53,18 +53,20 @@ test.afterAll(async () => {
   rmSync(root, { recursive: true, force: true });
 });
 
+test.skip(({ isMobile }) => isMobile, 'one project is enough');
+
 test('a newer build replaces the cached version on a later visit', async ({ page }) => {
-  const build = () => page.locator('meta[name="build"]').getAttribute('content');
+  const builtId = () => page.locator('meta[name="build"]').getAttribute('content');
   await page.goto(origin);
   await page.evaluate(() => navigator.serviceWorker.ready);
-  expect(await build()).toBe('one');
+  expect(await builtId()).toBe('one');
   current = 'two';
   await expect
     .poll(
       async () => {
         await page.goto(origin).catch(() => undefined);
         await page.waitForLoadState('load');
-        return build();
+        return builtId();
       },
       { timeout: 30_000 },
     )
