@@ -1,7 +1,12 @@
-export type Tier = 'rookie' | 'pro' | 'legend';
-export type Side = 'hero' | 'villain';
-export type Universe = 'marvel';
-export type PictureStyle = 'comic' | 'movie' | 'cartoon';
+export const TIERS = ['rookie', 'pro', 'legend'] as const;
+export const SIDES = ['hero', 'villain'] as const;
+export const UNIVERSES = ['marvel'] as const;
+export const PICTURE_STYLES = ['comic', 'movie', 'cartoon'] as const;
+
+export type Tier = (typeof TIERS)[number];
+export type Side = (typeof SIDES)[number];
+export type Universe = (typeof UNIVERSES)[number];
+export type PictureStyle = (typeof PICTURE_STYLES)[number];
 
 export interface Picture {
   file: string;

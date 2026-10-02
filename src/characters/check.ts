@@ -1,10 +1,5 @@
 import { normalise } from '../engine/normalise';
-import type { Character } from '../engine/types';
-
-const tiers = ['rookie', 'pro', 'legend'];
-const sides = ['hero', 'villain'];
-const universes = ['marvel'];
-const styles = ['comic', 'movie', 'cartoon'];
+import { PICTURE_STYLES, SIDES, TIERS, UNIVERSES, type Character } from '../engine/types';
 
 export function checkCharacters(
   characters: readonly Character[],
@@ -21,14 +16,16 @@ export function checkCharacters(
     ids.add(c.id);
 
     if (!c.name.trim()) fail('empty name');
-    if (!tiers.includes(c.tier)) fail(`invalid tier "${c.tier}"`);
-    if (!sides.includes(c.side)) fail(`invalid side "${c.side}"`);
-    if (!universes.includes(c.universe)) fail(`invalid universe "${c.universe}"`);
+    if (!(TIERS as readonly string[]).includes(c.tier)) fail(`invalid tier "${c.tier}"`);
+    if (!(SIDES as readonly string[]).includes(c.side)) fail(`invalid side "${c.side}"`);
+    if (!(UNIVERSES as readonly string[]).includes(c.universe))
+      fail(`invalid universe "${c.universe}"`);
     if (c.pictures.length < 1 || c.pictures.length > 3) {
       fail(`has ${c.pictures.length} pictures, expected 1 to 3`);
     }
     for (const p of c.pictures) {
-      if (!styles.includes(p.style)) fail(`invalid picture style "${p.style}" for ${p.file}`);
+      if (!(PICTURE_STYLES as readonly string[]).includes(p.style))
+        fail(`invalid picture style "${p.style}" for ${p.file}`);
       if (!fileExists(p.file)) fail(`missing picture file ${p.file}`);
     }
 

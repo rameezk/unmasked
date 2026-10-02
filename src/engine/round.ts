@@ -1,9 +1,7 @@
-import type { Character, Picture, Random, Tier } from './types';
+import { TIERS, type Character, type Picture, type Random, type Tier } from './types';
 
 export const ROUND_LENGTH = 10;
 export const CHOICE_COUNT = 4;
-
-const tierOrder: Tier[] = ['rookie', 'pro', 'legend'];
 
 export interface Card {
   character: Character;
@@ -28,8 +26,8 @@ export interface StartRoundOptions {
 }
 
 export function poolCharacters(characters: readonly Character[], pool: Tier): Character[] {
-  const max = tierOrder.indexOf(pool);
-  return characters.filter((c) => tierOrder.indexOf(c.tier) <= max);
+  const max = TIERS.indexOf(pool);
+  return characters.filter((c) => TIERS.indexOf(c.tier) <= max);
 }
 
 function shuffle<T>(items: readonly T[], random: Random): T[] {
@@ -43,7 +41,7 @@ function shuffle<T>(items: readonly T[], random: Random): T[] {
 
 export function startRound({ characters, pool, random }: StartRoundOptions): Round {
   const available = poolCharacters(characters, pool);
-  if (available.length < ROUND_LENGTH || available.length < CHOICE_COUNT) {
+  if (available.length < ROUND_LENGTH) {
     throw new Error(`Pool ${pool} has too few Characters`);
   }
   const chosen = shuffle(available, random).slice(0, ROUND_LENGTH);
