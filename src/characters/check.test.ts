@@ -4,6 +4,8 @@ import { describe, expect, it } from 'vitest';
 import type { Character } from '../engine/types';
 import { characters } from './characters';
 import { checkCharacters } from './check';
+import { startRound } from '../engine/round';
+import { TIERS } from '../engine/types';
 
 const publicDir = resolve(import.meta.dirname, '../../public');
 const fileExists = (file: string) => existsSync(resolve(publicDir, file));
@@ -33,8 +35,41 @@ describe('the shipped character list', () => {
     expect(checkCharacters(characters, fileExists)).toEqual([]);
   });
 
-  it('has enough Characters in the Rookie Pool for a Round', () => {
-    expect(characters.filter((c) => c.tier === 'rookie').length).toBeGreaterThanOrEqual(10);
+  it('has about 100 Characters', () => {
+    expect(characters.length).toBeGreaterThanOrEqual(95);
+    expect(characters.length).toBeLessThanOrEqual(105);
+  });
+
+  it('is roughly 40 Rookie, 40 Pro and 20 Legend', () => {
+    const count = (tier: string) => characters.filter((c) => c.tier === tier).length;
+    expect(count('rookie')).toBeGreaterThanOrEqual(36);
+    expect(count('rookie')).toBeLessThanOrEqual(44);
+    expect(count('pro')).toBeGreaterThanOrEqual(36);
+    expect(count('pro')).toBeLessThanOrEqual(44);
+    expect(count('legend')).toBeGreaterThanOrEqual(18);
+    expect(count('legend')).toBeLessThanOrEqual(22);
+  });
+
+  it('balances heroes and villains within each Tier', () => {
+    for (const tier of TIERS) {
+      const inTier = characters.filter((c) => c.tier === tier);
+      const ratio = inTier.filter((c) => c.side === 'hero').length / inTier.length;
+      expect(ratio).toBeGreaterThanOrEqual(0.4);
+      expect(ratio).toBeLessThanOrEqual(0.6);
+    }
+  });
+
+  it.each(TIERS)('fills a Pick Round from the %s Pool with distinct names', (pool) => {
+    let seed = 7;
+    const random = () => {
+      seed = (seed * 1664525 + 1013904223) % 4294967296;
+      return seed / 4294967296;
+    };
+    const round = startRound({ characters, mode: 'pick', pool, random });
+    expect(new Set(round.cards.map((c) => c.character.id)).size).toBe(10);
+    for (const card of round.cards) {
+      expect(new Set(card.choices.map((c) => c.name)).size).toBe(4);
+    }
   });
 });
 
