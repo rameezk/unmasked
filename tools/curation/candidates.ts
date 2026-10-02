@@ -1,5 +1,7 @@
 import {
   candidatesFile,
+  FETCH_TIMEOUT_MS,
+  isImageUrl,
   readJson,
   selectCharacters,
   USER_AGENT,
@@ -38,7 +40,10 @@ async function api(host: string, params: Record<string, string>): Promise<QueryR
   for (const [key, value] of Object.entries({ action: 'query', format: 'json', ...params })) {
     url.searchParams.set(key, value);
   }
-  const response = await fetch(url, { headers: { 'user-agent': USER_AGENT } });
+  const response = await fetch(url, {
+    headers: { 'user-agent': USER_AGENT },
+    signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
+  });
   if (!response.ok) throw new Error(`${host}: HTTP ${response.status}`);
   await new Promise((done) => setTimeout(done, 300));
   return (await response.json()) as QueryResponse;
@@ -71,6 +76,7 @@ async function gather(
       if (!info || !/^image\/(jpeg|png|webp)$/.test(info.mime)) continue;
       if (info.width < MIN_SIDE || info.height < MIN_SIDE) continue;
       if (SKIP_TITLE.test(page.title)) continue;
+      if (!isImageUrl(info.url)) continue;
       if (found.some((c) => c.url === info.url)) continue;
       found.push({
         characterId,

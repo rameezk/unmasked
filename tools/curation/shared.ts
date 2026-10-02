@@ -15,6 +15,7 @@ export const candidatesFile = resolve(dataDir, 'candidates.json');
 export const choicesFile = resolve(dataDir, 'choices.json');
 
 export const MAX_PICTURES = 3;
+export const FETCH_TIMEOUT_MS = 30_000;
 export const MAX_DOWNLOAD_BYTES = 20 * 1024 * 1024;
 export const IMAGE_HOSTS = /(^|\.)(wikia\.nocookie\.net|fandom\.com)$/;
 export const USER_AGENT = 'unmasked-curation/1.0 (personal family game; manual curation)';
@@ -35,6 +36,15 @@ export interface Choice {
 }
 
 export type Choices = Record<string, Choice>;
+
+export function isImageUrl(value: string): boolean {
+  try {
+    const url = new URL(value);
+    return url.protocol === 'https:' && IMAGE_HOSTS.test(url.hostname);
+  } catch {
+    return false;
+  }
+}
 
 export function readJson<T>(file: string, fallback: T): T {
   if (!existsSync(file)) return fallback;

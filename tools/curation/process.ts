@@ -1,6 +1,14 @@
 import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { existsSync, mkdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
+import {
+  existsSync,
+  mkdirSync,
+  readFileSync,
+  renameSync,
+  rmSync,
+  statSync,
+  writeFileSync,
+} from 'node:fs';
 import { resolve } from 'node:path';
 import {
   candidatesFile,
@@ -8,7 +16,8 @@ import {
   charactersFile,
   choicesFile,
   downloadsDir,
-  IMAGE_HOSTS,
+  FETCH_TIMEOUT_MS,
+  isImageUrl,
   isPictureStyle,
   MAX_DOWNLOAD_BYTES,
   MAX_PICTURES,
@@ -20,6 +29,7 @@ import {
   type Choices,
 } from './shared.ts';
 
+const MAX_REDIRECTS = 5;
 const WIDTH = 600;
 const HEIGHT = 800;
 const TARGET_BYTES = 50 * 1024;
@@ -52,20 +62,37 @@ if (plan.length === 0) {
   process.exit(0);
 }
 
+async function fetchFollowing(start: string): Promise<Response> {
+  let current = start;
+  for (let hop = 0; hop < MAX_REDIRECTS; hop++) {
+    if (!isImageUrl(current)) throw new Error(`Refusing to download ${current}`);
+    const response = await fetch(current, {
+      headers: { 'user-agent': USER_AGENT },
+      redirect: 'manual',
+      signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
+    });
+    const location = response.headers.get('location');
+    if (response.status < 300 || response.status >= 400 || !location) return response;
+    current = new URL(location, current).toString();
+  }
+  throw new Error(`Too many redirects for ${start}`);
+}
+
 async function download(url: string): Promise<string> {
   mkdirSync(downloadsDir, { recursive: true });
   const file = resolve(downloadsDir, createHash('sha256').update(url).digest('hex'));
   if (existsSync(file)) return file;
-  const parsed = new URL(url);
-  if (parsed.protocol !== 'https:' || !IMAGE_HOSTS.test(parsed.hostname)) {
-    throw new Error(`Refusing to download from ${parsed.hostname}`);
-  }
-  const response = await fetch(url, { headers: { 'user-agent': USER_AGENT } });
+  if (!isImageUrl(url)) throw new Error(`Refusing to download ${url}`);
+  const response = await fetchFollowing(url);
   if (!response.ok) throw new Error(`HTTP ${response.status} for ${url}`);
+  const declared = Number(response.headers.get('content-length') ?? 0);
+  if (declared > MAX_DOWNLOAD_BYTES) throw new Error(`Too large: ${url}`);
   const bytes = Buffer.from(await response.arrayBuffer());
   if (bytes.length > MAX_DOWNLOAD_BYTES) throw new Error(`Too large: ${url}`);
   if (!sniff(bytes)) throw new Error(`Not a jpeg, png or webp image: ${url}`);
-  writeFileSync(file, bytes);
+  const partial = `${file}.partial`;
+  writeFileSync(partial, bytes);
+  renameSync(partial, file);
   return file;
 }
 
@@ -81,6 +108,15 @@ function toWebp(input: string, output: string): void {
   const format = sniff(readFileSync(input));
   if (!format) throw new Error(`Not a jpeg, png or webp image: ${input}`);
   execFileSync('magick', [
+    '-limit',
+    'memory',
+    '256MiB',
+    '-limit',
+    'map',
+    '512MiB',
+    '-limit',
+    'area',
+    '64MP',
     `${format}:${input}[0]`,
     '-auto-orient',
     '-resize',
