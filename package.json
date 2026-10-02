@@ -12,6 +12,9 @@
     "format": "prettier --write .",
     "test": "vitest run",
     "test:e2e": "playwright test",
+    "curate:candidates": "node tools/curation/candidates.ts",
+    "curate:review": "node tools/curation/review.ts",
+    "curate:process": "node tools/curation/process.ts",
     "check": "pnpm typecheck && pnpm lint && pnpm test && pnpm test:e2e"
   },
   "devDependencies": {

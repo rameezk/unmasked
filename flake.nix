@@ -17,6 +17,7 @@
             pkgs.playwright-driver.browsers
             pkgs.git
             pkgs.wrangler
+            pkgs.imagemagick
           ];
           PLAYWRIGHT_BROWSERS_PATH = "${pkgs.playwright-driver.browsers}";
           PLAYWRIGHT_SKIP_VALIDATE_HOST_REQUIREMENTS = "true";
