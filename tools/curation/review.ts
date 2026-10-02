@@ -4,6 +4,7 @@ import {
   choicesFile,
   characters,
   isPictureStyle,
+  MAX_PICTURES,
   PICTURE_STYLES,
   readJson,
   selectCharacters,
@@ -154,12 +155,26 @@ function readBody(request: IncomingMessage): Promise<string> {
   });
 }
 
+const allowedHosts = new Set([`127.0.0.1:${PORT}`, `localhost:${PORT}`]);
+
 const server = createServer(async (request, response) => {
   const send = (status: number, type: string, body: string) => {
     response.writeHead(status, { 'content-type': type });
     response.end(body);
   };
+  if (!allowedHosts.has(request.headers.host ?? '')) {
+    send(403, 'text/plain', 'forbidden');
+    return;
+  }
   try {
+    if (request.method === 'POST') {
+      const origin = request.headers.origin;
+      const json = request.headers['content-type']?.startsWith('application/json');
+      if (!json || (origin !== undefined && !allowedHosts.has(new URL(origin).host))) {
+        send(403, 'text/plain', 'forbidden');
+        return;
+      }
+    }
     if (request.method === 'GET' && request.url === '/') {
       send(200, 'text/html; charset=utf-8', page);
     } else if (request.method === 'GET' && request.url === '/api/state') {
@@ -175,7 +190,7 @@ const server = createServer(async (request, response) => {
           candidates,
           choices: readJson<Choices>(choicesFile, {}),
           styles: PICTURE_STYLES,
-          max: 3,
+          max: MAX_PICTURES,
         }),
       );
     } else if (request.method === 'POST' && request.url === '/api/choice') {

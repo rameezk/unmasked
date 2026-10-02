@@ -15,6 +15,8 @@ export const candidatesFile = resolve(dataDir, 'candidates.json');
 export const choicesFile = resolve(dataDir, 'choices.json');
 
 export const MAX_PICTURES = 3;
+export const MAX_DOWNLOAD_BYTES = 20 * 1024 * 1024;
+export const IMAGE_HOSTS = /(^|\.)(wikia\.nocookie\.net|fandom\.com)$/;
 export const USER_AGENT = 'unmasked-curation/1.0 (personal family game; manual curation)';
 
 export interface Candidate {

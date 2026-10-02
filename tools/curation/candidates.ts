@@ -50,7 +50,11 @@ async function gather(
   style: PictureStyle,
   host: string,
 ): Promise<Candidate[]> {
-  const search = await api(host, { list: 'search', srsearch: name, srlimit: String(PAGES_PER_WIKI) });
+  const search = await api(host, {
+    list: 'search',
+    srsearch: name,
+    srlimit: String(PAGES_PER_WIKI),
+  });
   const titles = (search.query?.search ?? []).map((hit) => hit.title);
   const found: Candidate[] = [];
   for (const title of titles) {
@@ -85,7 +89,9 @@ async function gather(
 
 const selected = selectCharacters(process.argv.slice(2));
 const selectedIds = new Set(selected.map((c) => c.id));
-const kept = readJson<Candidate[]>(candidatesFile, []).filter((c) => !selectedIds.has(c.characterId));
+const kept = readJson<Candidate[]>(candidatesFile, []).filter(
+  (c) => !selectedIds.has(c.characterId),
+);
 const fresh: Candidate[] = [];
 
 for (const character of selected) {
