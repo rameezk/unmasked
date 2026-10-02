@@ -42,6 +42,7 @@ async function api(host: string, params: Record<string, string>): Promise<QueryR
   }
   const response = await fetch(url, {
     headers: { 'user-agent': USER_AGENT },
+    redirect: 'error',
     signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
   });
   if (!response.ok) throw new Error(`${host}: HTTP ${response.status}`);
@@ -54,6 +55,7 @@ async function gather(
   name: string,
   style: PictureStyle,
   host: string,
+  taken: Set<string>,
 ): Promise<Candidate[]> {
   const search = await api(host, {
     list: 'search',
@@ -77,7 +79,7 @@ async function gather(
       if (info.width < MIN_SIDE || info.height < MIN_SIDE) continue;
       if (SKIP_TITLE.test(page.title)) continue;
       if (!isImageUrl(info.url)) continue;
-      if (found.some((c) => c.url === info.url)) continue;
+      if (taken.has(info.url) || found.some((c) => c.url === info.url)) continue;
       found.push({
         characterId,
         style,
@@ -99,12 +101,14 @@ const kept = readJson<Candidate[]>(candidatesFile, []).filter(
   (c) => !selectedIds.has(c.characterId),
 );
 const fresh: Candidate[] = [];
+const taken = new Set(kept.map((c) => c.url));
 
 for (const character of selected) {
   for (const { style, host } of WIKIS) {
     try {
-      const found = await gather(character.id, character.name, style, host);
+      const found = await gather(character.id, character.name, style, host, taken);
       fresh.push(...found);
+      for (const c of found) taken.add(c.url);
       console.log(`${character.id} ${style}: ${found.length} candidates`);
     } catch (error) {
       console.error(`${character.id} ${style}: ${(error as Error).message}`);
