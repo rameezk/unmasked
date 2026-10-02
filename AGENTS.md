@@ -2,7 +2,7 @@
 
 ## Project
 
-- All tooling comes from the Nix flake devshell (see `docs/adr/0002-nix-flake-devshell-for-all-tooling.md`). Run every command inside it, via `nix develop` or direnv.
+- All tooling comes from the Nix flake devshell (see the ADRs in `docs/adr/`). Run every command inside it, via `nix develop` or direnv.
   Never install tools globally or let npm download them, Playwright browsers included. If a tool is missing, add it to the flake.
 - Read `docs/CONTEXT.md` before starting work and use its terms exactly in code, UI copy, tickets and docs. Never use the words it lists under _Avoid_.
 - Check `docs/adr/` before making a decision that touches an area an ADR covers. Do not reverse an accepted ADR without raising it first.
