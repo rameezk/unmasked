@@ -222,3 +222,123 @@ test.describe('Remembered settings and best Scores', () => {
     await expect(page.getByTestId('score')).toHaveText('10/10');
   });
 });
+
+test.describe('Comic-book look and feel', () => {
+  async function noHorizontalScroll(page: Page) {
+    const overflow = await page.evaluate(
+      () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+    );
+    expect(overflow).toBeLessThanOrEqual(0);
+  }
+
+  async function inViewport(page: Page, locator: ReturnType<Page['locator']>) {
+    const box = (await locator.boundingBox())!;
+    const view = page.viewportSize()!;
+    expect(box.y).toBeGreaterThanOrEqual(0);
+    expect(box.y + box.height).toBeLessThanOrEqual(view.height + 1);
+    expect(box.x).toBeGreaterThanOrEqual(0);
+    expect(box.x + box.width).toBeLessThanOrEqual(view.width + 1);
+  }
+
+  test('the reveal shows a Hero or Villain badge for the Side', async ({ page }) => {
+    const seen = new Set<string>();
+    for (let seed = 1; seed <= 12 && seen.size < 2; seed++) {
+      await start(page, 'Legend', seed);
+      for (let i = 0; i < 10; i++) {
+        const character = await shownCharacter(page);
+        await page.getByRole('button', { name: character.name, exact: true }).click();
+        await expect(page.getByTestId('side-badge')).toHaveText(
+          character.side === 'hero' ? 'Hero' : 'Villain',
+        );
+        seen.add(character.side);
+        await advance(page, i);
+      }
+    }
+    expect([...seen].sort()).toEqual(['hero', 'villain']);
+  });
+
+  test('a Pick Card fits the screen with no horizontal scrolling', async ({ page }) => {
+    await start(page, 'Rookie');
+    await noHorizontalScroll(page);
+    await inViewport(page, page.getByTestId('card-frame'));
+    for (const choice of await page.getByTestId('choice').all()) await inViewport(page, choice);
+  });
+
+  test('a Type Card fits the screen with the on-screen keyboard open', async ({ page }) => {
+    await page.goto('/?seed=1');
+    await page.getByLabel('Type').check();
+    await page.getByRole('button', { name: 'Play' }).click();
+    await page.setViewportSize({ width: 390, height: 460 });
+    await page.getByRole('textbox').focus();
+    await noHorizontalScroll(page);
+    await inViewport(page, page.getByTestId('card-frame'));
+    await inViewport(page, page.getByRole('textbox'));
+    await inViewport(page, page.getByRole('button', { name: 'Guess' }));
+    await inViewport(page, page.getByRole('button', { name: 'Reveal' }));
+  });
+
+  test('every screen is centred and the Picture keeps its 3:4 shape', async ({ page }) => {
+    const view = () => page.viewportSize()!.width;
+    const centred = async (locator: ReturnType<Page['locator']>) => {
+      const box = (await locator.boundingBox())!;
+      expect(Math.abs(box.x + box.width / 2 - view() / 2)).toBeLessThanOrEqual(2);
+    };
+    await page.goto('/?seed=1');
+    await centred(page.getByRole('main'));
+    await page.getByRole('link', { name: 'About' }).click();
+    await centred(page.getByRole('main'));
+    await page.getByRole('link', { name: 'Back' }).click();
+    await page.getByRole('button', { name: 'Play' }).click();
+    await centred(page.getByRole('main'));
+    const frame = (await page.getByTestId('card-frame').boundingBox())!;
+    expect(frame.width / frame.height).toBeCloseTo(0.75, 1);
+    await centred(page.getByTestId('card-frame'));
+    for (let i = 0; i < 10; i++) {
+      const character = await shownCharacter(page);
+      await page.getByRole('button', { name: character.name, exact: true }).click();
+      await advance(page, i);
+    }
+    await centred(page.getByRole('main'));
+  });
+
+  test('the About page credits Marvel and says this is an unofficial fan game', async ({
+    page,
+  }) => {
+    await page.goto('/?seed=1');
+    await page.getByRole('link', { name: 'About' }).click();
+    await expect(page.getByText('belong to Marvel')).toBeVisible();
+    await expect(page.getByText('unofficial fan game')).toBeVisible();
+    await page.getByRole('link', { name: 'Back' }).click();
+    await expect(page.getByRole('button', { name: 'Play' })).toBeVisible();
+  });
+
+  test('a correct answer bursts, a wrong tap does not, and the Round end celebrates', async ({
+    page,
+  }) => {
+    await start(page, 'Rookie');
+    const first = await shownCharacter(page);
+    const wrong = (await choiceNames(page)).find((n) => n !== first.name)!;
+    await page.getByRole('button', { name: wrong, exact: true }).click();
+    await expect(page.getByTestId('burst')).toHaveCount(0);
+    await page.getByRole('button', { name: first.name, exact: true }).click();
+    await expect(page.getByTestId('burst')).toBeVisible();
+    await advance(page, 0);
+    await expect(page.getByTestId('burst')).toHaveCount(0);
+    for (let i = 1; i < 10; i++) {
+      const character = await shownCharacter(page);
+      await page.getByRole('button', { name: character.name, exact: true }).click();
+      await advance(page, i);
+    }
+    await expect(page.getByTestId('celebration')).toBeVisible();
+  });
+
+  test('Type answers burst too', async ({ page }) => {
+    await page.goto('/?seed=1');
+    await page.getByLabel('Type').check();
+    await page.getByRole('button', { name: 'Play' }).click();
+    const character = await shownCharacter(page);
+    await page.getByRole('textbox').fill(character.name);
+    await page.getByRole('button', { name: 'Guess' }).click();
+    await expect(page.getByTestId('burst')).toBeVisible();
+  });
+});
