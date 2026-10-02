@@ -23,4 +23,7 @@ export interface Character {
   pictures: Picture[];
 }
 
+export const MODES = ['pick', 'type'] as const;
+export type Mode = (typeof MODES)[number];
+
 export type Random = () => number;

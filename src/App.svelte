@@ -1,14 +1,16 @@
 <script lang="ts">
   import {
     answerPick,
+    answerType,
     currentCard,
     nextCard,
+    revealCard,
     roundScore,
     startRound,
     ROUND_LENGTH,
     type Round,
   } from './engine/round';
-  import type { Character, Random, Tier } from './engine/types';
+  import type { Character, Mode, Random, Tier } from './engine/types';
 
   interface Props {
     characters: Character[];
@@ -23,20 +25,38 @@
     { value: 'legend', label: 'Legend' },
   ];
 
+  const modes: { value: Mode; label: string }[] = [
+    { value: 'pick', label: 'Pick' },
+    { value: 'type', label: 'Type' },
+  ];
+
+  let mode = $state<Mode>('pick');
   let pool = $state<Tier>('rookie');
+  let typed = $state('');
   let round = $state<Round | null>(null);
 
   const card = $derived(round !== null && !round.finished ? currentCard(round) : null);
 
   function play() {
-    round = startRound({ characters, pool, random });
+    typed = '';
+    round = startRound({ characters, mode, pool, random });
   }
 
   function pick(id: string) {
     if (round) round = answerPick(round, id);
   }
 
+  function guess(event: SubmitEvent) {
+    event.preventDefault();
+    if (round) round = answerType(round, typed);
+  }
+
+  function reveal() {
+    if (round) round = revealCard(round);
+  }
+
   function next() {
+    typed = '';
     if (round) round = nextCard(round);
   }
 
@@ -50,6 +70,15 @@
 
   {#if round === null}
     <section aria-label="Start">
+      <fieldset>
+        <legend>Mode</legend>
+        {#each modes as m (m.value)}
+          <label>
+            <input type="radio" name="mode" value={m.value} bind:group={mode} />
+            {m.label}
+          </label>
+        {/each}
+      </fieldset>
       <fieldset>
         <legend>Pool</legend>
         {#each pools as p (p.value)}
@@ -65,19 +94,38 @@
     <section aria-label="Card">
       <p>Card {round.index + 1} of {ROUND_LENGTH}</p>
       <img src={`${import.meta.env.BASE_URL}${card.picture.file}`} alt="Who is this?" width="240" />
-      <div class="choices">
-        {#each card.choices as choice (choice.id)}
-          <button
-            type="button"
-            data-testid="choice"
-            disabled={card.wrongIds.includes(choice.id) || card.revealed}
-            class:correct={card.revealed && choice.id === card.character.id}
-            onclick={() => pick(choice.id)}
-          >
-            {choice.name}
-          </button>
-        {/each}
-      </div>
+      {#if round.mode === 'type'}
+        {#if !card.revealed}
+          <form onsubmit={guess}>
+            <input
+              type="text"
+              aria-label="Your answer"
+              bind:value={typed}
+              autocapitalize="none"
+              autocorrect="off"
+              autocomplete="off"
+              spellcheck="false"
+              enterkeyhint="go"
+            />
+            <button type="submit">Guess</button>
+            <button type="button" onclick={reveal}>Reveal</button>
+          </form>
+        {/if}
+      {:else}
+        <div class="choices">
+          {#each card.choices as choice (choice.id)}
+            <button
+              type="button"
+              data-testid="choice"
+              disabled={card.wrongIds.includes(choice.id) || card.revealed}
+              class:correct={card.revealed && choice.id === card.character.id}
+              onclick={() => pick(choice.id)}
+            >
+              {choice.name}
+            </button>
+          {/each}
+        </div>
+      {/if}
       {#if card.revealed}
         <p data-testid="reveal">
           {card.character.name} - {card.character.side === 'hero' ? 'Hero' : 'Villain'}
