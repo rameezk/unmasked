@@ -1,0 +1,9 @@
+{
+  "name": "unmasked",
+  "compatibility_date": "2026-09-01",
+  "assets": { "directory": "./dist" },
+  "routes": [{ "pattern": "unmasked.rameezkhan.dev", "custom_domain": true }],
+  "workers_dev": false,
+  "preview_urls": false,
+  "send_metrics": false,
+}

@@ -4,7 +4,16 @@ import svelte from 'eslint-plugin-svelte';
 import tseslint from 'typescript-eslint';
 
 export default tseslint.config(
-  { ignores: ['dist', 'node_modules', 'test-results', 'playwright-report', '.worktree'] },
+  {
+    ignores: [
+      'dist',
+      'node_modules',
+      'test-results',
+      'playwright-report',
+      '.worktree',
+      '.wrangler',
+    ],
+  },
   js.configs.recommended,
   ...tseslint.configs.recommended,
   ...svelte.configs['flat/recommended'],
