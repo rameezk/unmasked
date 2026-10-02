@@ -1,4 +1,5 @@
-import { TIERS, type Character, type Picture, type Random, type Tier } from './types';
+import { TIERS, type Character, type Mode, type Picture, type Random, type Tier } from './types';
+import { normalise } from './normalise';
 
 export const ROUND_LENGTH = 10;
 export const CHOICE_COUNT = 4;
@@ -8,11 +9,12 @@ export interface Card {
   picture: Picture;
   choices: Character[];
   wrongIds: string[];
-  firstTapCorrect: boolean | null;
+  scored: boolean | null;
   revealed: boolean;
 }
 
 export interface Round {
+  mode: Mode;
   pool: Tier;
   cards: Card[];
   index: number;
@@ -21,6 +23,7 @@ export interface Round {
 
 export interface StartRoundOptions {
   characters: readonly Character[];
+  mode: Mode;
   pool: Tier;
   random: Random;
 }
@@ -39,7 +42,7 @@ function shuffle<T>(items: readonly T[], random: Random): T[] {
   return result;
 }
 
-export function startRound({ characters, pool, random }: StartRoundOptions): Round {
+export function startRound({ characters, mode, pool, random }: StartRoundOptions): Round {
   const available = poolCharacters(characters, pool);
   if (available.length < ROUND_LENGTH) {
     throw new Error(`Pool ${pool} has too few Characters`);
@@ -56,11 +59,11 @@ export function startRound({ characters, pool, random }: StartRoundOptions): Rou
       picture,
       choices: shuffle([character, ...wrong], random),
       wrongIds: [],
-      firstTapCorrect: null,
+      scored: null,
       revealed: false,
     };
   });
-  return { pool, cards, index: 0, finished: false };
+  return { mode, pool, cards, index: 0, finished: false };
 }
 
 export function currentCard(round: Round): Card {
@@ -76,14 +79,15 @@ function withCurrentCard(round: Round, card: Card): Round {
 
 export function answerPick(round: Round, choiceId: string): Round {
   const card = currentCard(round);
-  if (round.finished || card.revealed || card.wrongIds.includes(choiceId)) return round;
+  if (round.mode !== 'pick' || round.finished || card.revealed) return round;
+  if (card.wrongIds.includes(choiceId)) return round;
   if (!card.choices.some((c) => c.id === choiceId)) return round;
   const correct = choiceId === card.character.id;
-  const firstTapCorrect = card.firstTapCorrect ?? correct;
-  if (correct) return withCurrentCard(round, { ...card, firstTapCorrect, revealed: true });
+  const scored = card.scored ?? correct;
+  if (correct) return withCurrentCard(round, { ...card, scored, revealed: true });
   return withCurrentCard(round, {
     ...card,
-    firstTapCorrect,
+    scored,
     wrongIds: [...card.wrongIds, choiceId],
   });
 }
@@ -95,5 +99,21 @@ export function nextCard(round: Round): Round {
 }
 
 export function roundScore(round: Round): number {
-  return round.cards.filter((c) => c.firstTapCorrect === true).length;
+  return round.cards.filter((c) => c.scored === true).length;
+}
+
+export function answerType(round: Round, text: string): Round {
+  const card = currentCard(round);
+  if (round.mode !== 'type' || round.finished || card.revealed) return round;
+  const typed = normalise(text);
+  if (typed === '') return round;
+  const accepted = [card.character.name, ...card.character.aliases].map(normalise);
+  if (!accepted.includes(typed)) return round;
+  return withCurrentCard(round, { ...card, scored: true, revealed: true });
+}
+
+export function revealCard(round: Round): Round {
+  const card = currentCard(round);
+  if (round.mode !== 'type' || round.finished || card.revealed) return round;
+  return withCurrentCard(round, { ...card, scored: false, revealed: true });
 }

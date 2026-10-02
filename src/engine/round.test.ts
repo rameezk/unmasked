@@ -1,5 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import { answerPick, currentCard, nextCard, roundScore, startRound } from './round';
+import {
+  answerPick,
+  answerType,
+  currentCard,
+  nextCard,
+  revealCard,
+  roundScore,
+  startRound,
+} from './round';
 import { seededRandom } from './random';
 import type { Character, Tier } from './types';
 
@@ -26,6 +34,7 @@ describe('startRound', () => {
   it('deals ten distinct Characters', () => {
     const round = startRound({
       characters: cast,
+      mode: 'pick',
       pool: 'legend',
       random: seededRandom(1),
     });
@@ -38,6 +47,7 @@ describe('startRound', () => {
     for (let seed = 0; seed < 20; seed++) {
       const round = startRound({
         characters: cast,
+        mode: 'pick',
         pool: 'rookie',
         random: seededRandom(seed),
       });
@@ -52,6 +62,7 @@ describe('startRound', () => {
     for (let seed = 0; seed < 20; seed++) {
       const round = startRound({
         characters: cast,
+        mode: 'pick',
         pool: 'pro',
         random: seededRandom(seed),
       });
@@ -61,6 +72,7 @@ describe('startRound', () => {
       Array.from({ length: 20 }, (_, seed) =>
         startRound({
           characters: cast,
+          mode: 'pick',
           pool: 'pro',
           random: seededRandom(seed),
         }).cards.map((c) => tierOf(c.character.id)),
@@ -74,6 +86,7 @@ describe('startRound', () => {
     for (let seed = 0; seed < 30; seed++) {
       const round = startRound({
         characters: cast,
+        mode: 'pick',
         pool: 'legend',
         random: seededRandom(seed),
       });
@@ -90,6 +103,7 @@ describe('startRound', () => {
   it('shows one of the Character pictures', () => {
     const round = startRound({
       characters: cast,
+      mode: 'pick',
       pool: 'legend',
       random: seededRandom(3),
     });
@@ -101,11 +115,13 @@ describe('startRound', () => {
   it('is deterministic for the same random source', () => {
     const a = startRound({
       characters: cast,
+      mode: 'pick',
       pool: 'legend',
       random: seededRandom(7),
     });
     const b = startRound({
       characters: cast,
+      mode: 'pick',
       pool: 'legend',
       random: seededRandom(7),
     });
@@ -114,7 +130,13 @@ describe('startRound', () => {
 });
 
 describe('answerPick', () => {
-  const setup = () => startRound({ characters: cast, pool: 'rookie', random: seededRandom(5) });
+  const setup = () =>
+    startRound({
+      characters: cast,
+      mode: 'pick',
+      pool: 'rookie',
+      random: seededRandom(5),
+    });
 
   it('scores a correct first tap and reveals the Card', () => {
     let round = setup();
@@ -149,6 +171,7 @@ describe('nextCard', () => {
   it('finishes after ten Cards with the Score out of ten', () => {
     let round = startRound({
       characters: cast,
+      mode: 'pick',
       pool: 'legend',
       random: seededRandom(2),
     });
@@ -165,9 +188,93 @@ describe('nextCard', () => {
   it('does not advance past an unrevealed Card', () => {
     const round = startRound({
       characters: cast,
+      mode: 'pick',
       pool: 'legend',
       random: seededRandom(2),
     });
     expect(nextCard(round)).toEqual(round);
+  });
+});
+
+describe('Type mode', () => {
+  const named = (name: string, aliases: string[] = []): Character => ({
+    id: name,
+    name,
+    aliases,
+    tier: 'rookie',
+    side: 'hero',
+    universe: 'marvel',
+    pictures: [{ file: 'x.svg', style: 'comic' }],
+  });
+  const typeCast = [
+    named('Spider-Man'),
+    named('Captain America', ['cap']),
+    named('Thor'),
+    ...Array.from({ length: 9 }, (_, i) => named(`Filler ${i}`)),
+  ];
+
+  const startOn = (name: string) => {
+    for (let seed = 0; seed < 200; seed++) {
+      const round = startRound({
+        characters: typeCast,
+        mode: 'type',
+        pool: 'rookie',
+        random: seededRandom(seed),
+      });
+      if (currentCard(round).character.name === name) return round;
+    }
+    throw new Error(`no seed shows ${name}`);
+  };
+
+  it('ignores case and punctuation and scores the Card', () => {
+    const round = answerType(startOn('Spider-Man'), 'spiderman');
+    expect(currentCard(round).revealed).toBe(true);
+    expect(roundScore(round)).toBe(1);
+  });
+
+  it('accepts Aliases', () => {
+    const round = answerType(startOn('Captain America'), ' Cap! ');
+    expect(currentCard(round).revealed).toBe(true);
+    expect(roundScore(round)).toBe(1);
+  });
+
+  it('has no typo tolerance and lets the player retry', () => {
+    let round = answerType(startOn('Thor'), 'thar');
+    expect(currentCard(round).revealed).toBe(false);
+    expect(roundScore(round)).toBe(0);
+    round = answerType(round, 'thor');
+    expect(currentCard(round).revealed).toBe(true);
+    expect(roundScore(round)).toBe(1);
+  });
+
+  it('does not accept empty input', () => {
+    const round = answerType(startOn('Thor'), ' - ');
+    expect(currentCard(round).revealed).toBe(false);
+  });
+
+  it('forfeits the Card on Reveal, even after a later correct answer', () => {
+    let round = revealCard(startOn('Thor'));
+    expect(currentCard(round).revealed).toBe(true);
+    round = answerType(round, 'thor');
+    expect(roundScore(round)).toBe(0);
+  });
+
+  it('ignores typed answers and Reveal outside Type mode', () => {
+    const pick = startRound({
+      characters: cast,
+      mode: 'pick',
+      pool: 'rookie',
+      random: seededRandom(5),
+    });
+    const name = currentCard(pick).character.name;
+    expect(answerType(pick, name)).toEqual(pick);
+    const typeRound = startRound({
+      characters: cast,
+      mode: 'type',
+      pool: 'rookie',
+      random: seededRandom(5),
+    });
+    expect(answerPick(typeRound, currentCard(typeRound).character.id)).toEqual(typeRound);
+    expect(revealCard(pick)).toEqual(pick);
   });
 });

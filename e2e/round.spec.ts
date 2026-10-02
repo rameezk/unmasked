@@ -3,6 +3,7 @@ import { characters } from '../src/characters/characters';
 
 async function start(page: Page, pool: string, seed = 1) {
   await page.goto(`/?seed=${seed}`);
+  await page.getByLabel('Pick').check();
   await page.getByLabel(pool).check();
   await page.getByRole('button', { name: 'Play' }).click();
 }
@@ -80,4 +81,63 @@ test('Pro Rounds only use Rookie and Pro Characters', async ({ page }) => {
       await advance(page, i);
     }
   }
+});
+
+test.describe('Type mode', () => {
+  async function startType(page: Page, seed = 1) {
+    await page.goto(`/?seed=${seed}`);
+    await page.getByLabel('Type').check();
+    await page.getByRole('button', { name: 'Play' }).click();
+  }
+
+  test('the text field turns off phone keyboard helpers', async ({ page }) => {
+    await startType(page);
+    const field = page.getByRole('textbox');
+    await expect(field).toHaveAttribute('autocapitalize', 'none');
+    await expect(field).toHaveAttribute('autocorrect', 'off');
+    await expect(field).toHaveAttribute('autocomplete', 'off');
+    await expect(field).toHaveAttribute('spellcheck', 'false');
+    await expect(page.getByTestId('choice')).toHaveCount(0);
+  });
+
+  test('wrong answers keep the Card open, Reveal forfeits, correct answers score', async ({
+    page,
+  }) => {
+    await startType(page);
+
+    const first = await shownCharacter(page);
+    await page.getByRole('textbox').fill('definitely wrong');
+    await page.getByRole('button', { name: 'Guess' }).click();
+    await expect(page.getByTestId('reveal')).toHaveCount(0);
+    await page.getByRole('button', { name: 'Reveal' }).click();
+    await expect(page.getByTestId('reveal')).toContainText(first.name);
+    await expect(page.getByRole('textbox')).toHaveCount(0);
+    await advance(page, 0);
+
+    for (let i = 1; i < 10; i++) {
+      const character = await shownCharacter(page);
+      const typed = i % 2 === 0 ? character.name.toUpperCase() : character.name.replace(/\W/g, '');
+      await page.getByRole('textbox').fill(typed);
+      await page.keyboard.press('Enter');
+      await expect(page.getByTestId('reveal')).toContainText(character.name);
+      await advance(page, i);
+    }
+    await expect(page.getByTestId('score')).toHaveText('9/10');
+  });
+
+  test('Aliases are accepted', async ({ page }) => {
+    for (let seed = 1; seed < 40; seed++) {
+      await startType(page, seed);
+      const character = await shownCharacter(page);
+      if (character.aliases.length === 0) {
+        await page.goto('/');
+        continue;
+      }
+      await page.getByRole('textbox').fill(character.aliases[0]!);
+      await page.getByRole('button', { name: 'Guess' }).click();
+      await expect(page.getByTestId('reveal')).toContainText(character.name);
+      return;
+    }
+    throw new Error('no seed shows a Character with an Alias first');
+  });
 });
