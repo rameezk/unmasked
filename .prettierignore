@@ -1,0 +1,8 @@
+node_modules
+dist
+test-results
+playwright-report
+pnpm-lock.yaml
+.worktree
+.agents
+.claude
