@@ -141,3 +141,84 @@ test.describe('Type mode', () => {
     throw new Error('no seed shows a Character with an Alias first');
   });
 });
+
+test.describe('Remembered settings and best Scores', () => {
+  async function playRound(page: Page, correct: number) {
+    for (let i = 0; i < 10; i++) {
+      const character = await shownCharacter(page);
+      if (i < correct) {
+        await page.getByRole('button', { name: character.name, exact: true }).click();
+      } else {
+        const wrong = (await choiceNames(page)).find((n) => n !== character.name)!;
+        await page.getByRole('button', { name: wrong, exact: true }).click();
+        await page.getByRole('button', { name: character.name, exact: true }).click();
+      }
+      await advance(page, i);
+    }
+  }
+
+  test('first visit selects Pick + Rookie and shows no best Scores', async ({ page }) => {
+    await page.goto('/?seed=1');
+    await expect(page.getByLabel('Pick')).toBeChecked();
+    await expect(page.getByLabel('Rookie')).toBeChecked();
+    await expect(page.getByTestId('best-score')).toHaveCount(0);
+  });
+
+  test('settings and best Scores persist per combination, and a lower Score does not replace the best', async ({
+    page,
+  }) => {
+    await start(page, 'Pro');
+    await playRound(page, 6);
+    await page.getByRole('button', { name: 'Play again' }).click();
+    await page.getByLabel('Pro').check();
+    await page.getByRole('button', { name: 'Play' }).click();
+    await playRound(page, 8);
+    await page.getByRole('button', { name: 'Play again' }).click();
+    await page.getByRole('button', { name: 'Play' }).click();
+    await playRound(page, 5);
+    await expect(page.getByTestId('score')).toHaveText('5/10');
+
+    await page.getByRole('button', { name: 'Play again' }).click();
+    await page.getByLabel('Legend').check();
+    await page.getByRole('button', { name: 'Play' }).click();
+    await playRound(page, 3);
+    await page.getByRole('button', { name: 'Play again' }).click();
+
+    await page.reload();
+    await expect(page.getByLabel('Pick')).toBeChecked();
+    await expect(page.getByLabel('Legend')).toBeChecked();
+    await expect(page.getByTestId('best-score')).toHaveCount(2);
+    await expect(page.getByTestId('best-score').filter({ hasText: 'Pick + Pro' })).toContainText(
+      '8/10',
+    );
+    await expect(page.getByTestId('best-score').filter({ hasText: 'Pick + Legend' })).toContainText(
+      '3/10',
+    );
+  });
+
+  test('corrupt saved data falls back to the defaults and a Round still plays', async ({
+    page,
+  }) => {
+    await page.addInitScript(() => localStorage.setItem('unmasked:v1', '{broken'));
+    await page.goto('/?seed=1');
+    await expect(page.getByLabel('Rookie')).toBeChecked();
+    await page.getByRole('button', { name: 'Play' }).click();
+    await playRound(page, 10);
+    await expect(page.getByTestId('score')).toHaveText('10/10');
+  });
+
+  test('storage that throws does not break the game', async ({ page }) => {
+    await page.addInitScript(() => {
+      Object.defineProperty(window, 'localStorage', {
+        get() {
+          throw new Error('denied');
+        },
+      });
+    });
+    await page.goto('/?seed=1');
+    await expect(page.getByLabel('Pick')).toBeChecked();
+    await page.getByRole('button', { name: 'Play' }).click();
+    await playRound(page, 10);
+    await expect(page.getByTestId('score')).toHaveText('10/10');
+  });
+});

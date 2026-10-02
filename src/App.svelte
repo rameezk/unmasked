@@ -11,6 +11,7 @@
     type Round,
   } from './engine/round';
   import type { Character, Mode, Random, Tier } from './engine/types';
+  import { browserStore, createSaved } from './saved/saved';
 
   interface Props {
     characters: Character[];
@@ -30,14 +31,28 @@
     { value: 'type', label: 'Type' },
   ];
 
-  let mode = $state<Mode>('pick');
-  let pool = $state<Tier>('rookie');
+  const saved = createSaved(browserStore());
+  const initial = saved.settings();
+  let mode = $state<Mode>(initial.mode);
+  let pool = $state<Tier>(initial.pool);
+  let bestScores = $state(readBestScores());
   let typed = $state('');
   let round = $state<Round | null>(null);
 
   const card = $derived(round !== null && !round.finished ? currentCard(round) : null);
 
+  function readBestScores() {
+    return modes.flatMap((m) =>
+      pools.flatMap((p) => {
+        const score = saved.bestScore(m.value, p.value);
+        if (score === null) return [];
+        return [{ key: `${m.value}:${p.value}`, label: `${m.label} + ${p.label}`, score }];
+      }),
+    );
+  }
+
   function play() {
+    saved.saveSettings({ mode, pool });
     typed = '';
     round = startRound({ characters, mode, pool, random });
   }
@@ -57,7 +72,12 @@
 
   function next() {
     typed = '';
-    if (round) round = nextCard(round);
+    if (!round) return;
+    round = nextCard(round);
+    if (round.finished) {
+      saved.recordScore(round.mode, round.pool, roundScore(round));
+      bestScores = readBestScores();
+    }
   }
 
   function backToStart() {
@@ -88,6 +108,14 @@
           </label>
         {/each}
       </fieldset>
+      {#if bestScores.length > 0}
+        <h2>Best Scores</h2>
+        <ul>
+          {#each bestScores as best (best.key)}
+            <li data-testid="best-score">{best.label}: {best.score}/{ROUND_LENGTH}</li>
+          {/each}
+        </ul>
+      {/if}
       <button type="button" onclick={play}>Play</button>
     </section>
   {:else if card}
