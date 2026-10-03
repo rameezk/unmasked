@@ -86,7 +86,6 @@ const page = `<!doctype html>
         frame.className = 'frame';
         const img = document.createElement('img');
         img.loading = 'lazy';
-        img.referrerPolicy = 'no-referrer';
         img.src = thumb(candidate.url);
         img.alt = candidate.title;
         frame.append(img);
