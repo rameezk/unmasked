@@ -634,19 +634,24 @@
   }
   .celebration i {
     position: absolute;
-    top: -1rem;
+    top: -1.4rem;
     width: 0.8rem;
     height: 1.2rem;
     border: 2px solid var(--ink);
-    animation: fall 2.4s ease-in infinite;
+    animation: fall 2.4s ease-in infinite backwards;
   }
   @keyframes fall {
+    from {
+      transform: translateY(0) rotate(0deg);
+    }
     to {
       transform: translateY(32rem) rotate(540deg);
     }
   }
   @media (prefers-reduced-motion: reduce) {
-    .celebration i,
+    .celebration {
+      display: none;
+    }
     .burst span,
     .score-burst {
       animation: none;
