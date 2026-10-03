@@ -78,12 +78,12 @@ async function fetchFollowing(start: string, referer: string): Promise<Response>
   throw new Error(`Too many redirects for ${start}`);
 }
 
-async function download({ url, source }: Candidate): Promise<string> {
+async function download({ url, source: referer }: Candidate): Promise<string> {
   mkdirSync(downloadsDir, { recursive: true });
   const file = resolve(downloadsDir, createHash('sha256').update(url).digest('hex'));
   if (existsSync(file)) return file;
   if (!isImageUrl(url)) throw new Error(`Refusing to download ${url}`);
-  const response = await fetchFollowing(url, source);
+  const response = await fetchFollowing(url, referer);
   if (!response.ok) throw new Error(`HTTP ${response.status} for ${url}`);
   const declared = Number(response.headers.get('content-length') ?? 0);
   if (declared > MAX_DOWNLOAD_BYTES) throw new Error(`Too large: ${url}`);
