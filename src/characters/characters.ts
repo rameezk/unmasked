@@ -1048,8 +1048,9 @@ export const characters: Character[] = [
     side: 'hero',
     universe: 'marvel',
     pictures: [
-      { file: 'pictures/nightcrawler-1.svg', style: 'comic' },
-      { file: 'pictures/nightcrawler-2.svg', style: 'movie' },
+      { file: 'pictures/nightcrawler-1.webp', style: 'comic' },
+      { file: 'pictures/nightcrawler-2.webp', style: 'comic' },
+      { file: 'pictures/nightcrawler-3.webp', style: 'cartoon' },
     ],
   },
   {
@@ -1060,8 +1061,9 @@ export const characters: Character[] = [
     side: 'hero',
     universe: 'marvel',
     pictures: [
-      { file: 'pictures/colossus-1.svg', style: 'comic' },
-      { file: 'pictures/colossus-2.svg', style: 'movie' },
+      { file: 'pictures/colossus-1.webp', style: 'comic' },
+      { file: 'pictures/colossus-2.webp', style: 'comic' },
+      { file: 'pictures/colossus-3.webp', style: 'cartoon' },
     ],
   },
   {
@@ -1072,8 +1074,9 @@ export const characters: Character[] = [
     side: 'hero',
     universe: 'marvel',
     pictures: [
-      { file: 'pictures/cable-1.svg', style: 'comic' },
-      { file: 'pictures/cable-2.svg', style: 'movie' },
+      { file: 'pictures/cable-1.webp', style: 'comic' },
+      { file: 'pictures/cable-2.webp', style: 'cartoon' },
+      { file: 'pictures/cable-3.webp', style: 'cartoon' },
     ],
   },
   {
@@ -1084,8 +1087,9 @@ export const characters: Character[] = [
     side: 'hero',
     universe: 'marvel',
     pictures: [
-      { file: 'pictures/nova-1.svg', style: 'comic' },
-      { file: 'pictures/nova-2.svg', style: 'movie' },
+      { file: 'pictures/nova-1.webp', style: 'comic' },
+      { file: 'pictures/nova-2.webp', style: 'comic' },
+      { file: 'pictures/nova-3.webp', style: 'comic' },
     ],
   },
   {
@@ -1096,8 +1100,9 @@ export const characters: Character[] = [
     side: 'hero',
     universe: 'marvel',
     pictures: [
-      { file: 'pictures/black-bolt-1.svg', style: 'comic' },
-      { file: 'pictures/black-bolt-2.svg', style: 'movie' },
+      { file: 'pictures/black-bolt-1.webp', style: 'comic' },
+      { file: 'pictures/black-bolt-2.webp', style: 'movie' },
+      { file: 'pictures/black-bolt-3.webp', style: 'movie' },
     ],
   },
   {
@@ -1108,8 +1113,9 @@ export const characters: Character[] = [
     side: 'hero',
     universe: 'marvel',
     pictures: [
-      { file: 'pictures/adam-warlock-1.svg', style: 'comic' },
-      { file: 'pictures/adam-warlock-2.svg', style: 'movie' },
+      { file: 'pictures/adam-warlock-1.webp', style: 'comic' },
+      { file: 'pictures/adam-warlock-2.webp', style: 'movie' },
+      { file: 'pictures/adam-warlock-3.webp', style: 'movie' },
     ],
   },
   {
@@ -1120,8 +1126,9 @@ export const characters: Character[] = [
     side: 'hero',
     universe: 'marvel',
     pictures: [
-      { file: 'pictures/squirrel-girl-1.svg', style: 'comic' },
-      { file: 'pictures/squirrel-girl-2.svg', style: 'movie' },
+      { file: 'pictures/squirrel-girl-1.webp', style: 'comic' },
+      { file: 'pictures/squirrel-girl-2.webp', style: 'comic' },
+      { file: 'pictures/squirrel-girl-3.webp', style: 'comic' },
     ],
   },
   {
@@ -1132,8 +1139,9 @@ export const characters: Character[] = [
     side: 'hero',
     universe: 'marvel',
     pictures: [
-      { file: 'pictures/blade-1.svg', style: 'comic' },
-      { file: 'pictures/blade-2.svg', style: 'movie' },
+      { file: 'pictures/blade-1.webp', style: 'comic' },
+      { file: 'pictures/blade-2.webp', style: 'movie' },
+      { file: 'pictures/blade-3.webp', style: 'movie' },
     ],
   },
   {
@@ -1144,8 +1152,9 @@ export const characters: Character[] = [
     side: 'hero',
     universe: 'marvel',
     pictures: [
-      { file: 'pictures/luke-cage-1.svg', style: 'comic' },
-      { file: 'pictures/luke-cage-2.svg', style: 'movie' },
+      { file: 'pictures/luke-cage-1.webp', style: 'comic' },
+      { file: 'pictures/luke-cage-2.webp', style: 'comic' },
+      { file: 'pictures/luke-cage-3.webp', style: 'movie' },
     ],
   },
   {
@@ -1156,8 +1165,9 @@ export const characters: Character[] = [
     side: 'hero',
     universe: 'marvel',
     pictures: [
-      { file: 'pictures/iron-fist-1.svg', style: 'comic' },
-      { file: 'pictures/iron-fist-2.svg', style: 'movie' },
+      { file: 'pictures/iron-fist-1.webp', style: 'comic' },
+      { file: 'pictures/iron-fist-2.webp', style: 'comic' },
+      { file: 'pictures/iron-fist-3.webp', style: 'cartoon' },
     ],
   },
   {
@@ -1168,8 +1178,9 @@ export const characters: Character[] = [
     side: 'villain',
     universe: 'marvel',
     pictures: [
-      { file: 'pictures/m-o-d-o-k-1.svg', style: 'comic' },
-      { file: 'pictures/m-o-d-o-k-2.svg', style: 'movie' },
+      { file: 'pictures/m-o-d-o-k-1.webp', style: 'comic' },
+      { file: 'pictures/m-o-d-o-k-2.webp', style: 'comic' },
+      { file: 'pictures/m-o-d-o-k-3.webp', style: 'movie' },
     ],
   },
   {
@@ -1180,8 +1191,9 @@ export const characters: Character[] = [
     side: 'villain',
     universe: 'marvel',
     pictures: [
-      { file: 'pictures/klaw-1.svg', style: 'comic' },
-      { file: 'pictures/klaw-2.svg', style: 'movie' },
+      { file: 'pictures/klaw-1.webp', style: 'comic' },
+      { file: 'pictures/klaw-2.webp', style: 'movie' },
+      { file: 'pictures/klaw-3.webp', style: 'cartoon' },
     ],
   },
   {
@@ -1192,8 +1204,9 @@ export const characters: Character[] = [
     side: 'villain',
     universe: 'marvel',
     pictures: [
-      { file: 'pictures/mister-sinister-1.svg', style: 'comic' },
-      { file: 'pictures/mister-sinister-2.svg', style: 'movie' },
+      { file: 'pictures/mister-sinister-1.webp', style: 'comic' },
+      { file: 'pictures/mister-sinister-2.webp', style: 'comic' },
+      { file: 'pictures/mister-sinister-3.webp', style: 'comic' },
     ],
   },
   {
@@ -1204,8 +1217,9 @@ export const characters: Character[] = [
     side: 'villain',
     universe: 'marvel',
     pictures: [
-      { file: 'pictures/annihilus-1.svg', style: 'comic' },
-      { file: 'pictures/annihilus-2.svg', style: 'movie' },
+      { file: 'pictures/annihilus-1.webp', style: 'comic' },
+      { file: 'pictures/annihilus-2.webp', style: 'comic' },
+      { file: 'pictures/annihilus-3.webp', style: 'cartoon' },
     ],
   },
   {
@@ -1216,8 +1230,9 @@ export const characters: Character[] = [
     side: 'villain',
     universe: 'marvel',
     pictures: [
-      { file: 'pictures/super-skrull-1.svg', style: 'comic' },
-      { file: 'pictures/super-skrull-2.svg', style: 'movie' },
+      { file: 'pictures/super-skrull-1.webp', style: 'comic' },
+      { file: 'pictures/super-skrull-2.webp', style: 'comic' },
+      { file: 'pictures/super-skrull-3.webp', style: 'comic' },
     ],
   },
   {
@@ -1228,8 +1243,9 @@ export const characters: Character[] = [
     side: 'villain',
     universe: 'marvel',
     pictures: [
-      { file: 'pictures/shadow-king-1.svg', style: 'comic' },
-      { file: 'pictures/shadow-king-2.svg', style: 'movie' },
+      { file: 'pictures/shadow-king-1.webp', style: 'comic' },
+      { file: 'pictures/shadow-king-2.webp', style: 'comic' },
+      { file: 'pictures/shadow-king-3.webp', style: 'comic' },
     ],
   },
   {
@@ -1240,8 +1256,9 @@ export const characters: Character[] = [
     side: 'villain',
     universe: 'marvel',
     pictures: [
-      { file: 'pictures/arcade-1.svg', style: 'comic' },
-      { file: 'pictures/arcade-2.svg', style: 'movie' },
+      { file: 'pictures/arcade-1.webp', style: 'comic' },
+      { file: 'pictures/arcade-2.webp', style: 'comic' },
+      { file: 'pictures/arcade-3.webp', style: 'comic' },
     ],
   },
   {
@@ -1252,8 +1269,9 @@ export const characters: Character[] = [
     side: 'villain',
     universe: 'marvel',
     pictures: [
-      { file: 'pictures/proteus-1.svg', style: 'comic' },
-      { file: 'pictures/proteus-2.svg', style: 'movie' },
+      { file: 'pictures/proteus-1.webp', style: 'comic' },
+      { file: 'pictures/proteus-2.webp', style: 'comic' },
+      { file: 'pictures/proteus-3.webp', style: 'comic' },
     ],
   },
   {
@@ -1264,8 +1282,9 @@ export const characters: Character[] = [
     side: 'villain',
     universe: 'marvel',
     pictures: [
-      { file: 'pictures/count-nefaria-1.svg', style: 'comic' },
-      { file: 'pictures/count-nefaria-2.svg', style: 'movie' },
+      { file: 'pictures/count-nefaria-1.webp', style: 'comic' },
+      { file: 'pictures/count-nefaria-2.webp', style: 'comic' },
+      { file: 'pictures/count-nefaria-3.webp', style: 'comic' },
     ],
   },
   {
@@ -1276,8 +1295,9 @@ export const characters: Character[] = [
     side: 'villain',
     universe: 'marvel',
     pictures: [
-      { file: 'pictures/hobgoblin-1.svg', style: 'comic' },
-      { file: 'pictures/hobgoblin-2.svg', style: 'movie' },
+      { file: 'pictures/hobgoblin-1.webp', style: 'comic' },
+      { file: 'pictures/hobgoblin-2.webp', style: 'cartoon' },
+      { file: 'pictures/hobgoblin-3.webp', style: 'cartoon' },
     ],
   },
 ];
