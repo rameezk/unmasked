@@ -342,3 +342,22 @@ test.describe('Comic-book look and feel', () => {
     await expect(page.getByTestId('burst')).toBeVisible();
   });
 });
+
+test.describe('Reduced motion', () => {
+  test.use({ reducedMotion: 'reduce' });
+
+  test("the End of Round hides the confetti and keeps the Score and the Round's Characters", async ({
+    page,
+  }) => {
+    await start(page, 'Rookie');
+    for (let i = 0; i < 10; i++) {
+      const character = await shownCharacter(page);
+      await page.getByRole('button', { name: character.name, exact: true }).click();
+      await advance(page, i);
+    }
+    await expect(page.getByTestId('celebration')).toBeHidden();
+    await expect(page.getByTestId('score')).toHaveText('10/10');
+    await expect(page.getByTestId('round-character')).toHaveCount(10);
+    await expect(page.getByTestId('round-character').first()).toBeVisible();
+  });
+});
