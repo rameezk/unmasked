@@ -62,12 +62,12 @@ if (plan.length === 0) {
   process.exit(0);
 }
 
-async function fetchFollowing(start: string): Promise<Response> {
+async function fetchFollowing(start: string, referer: string): Promise<Response> {
   let current = start;
   for (let hop = 0; hop < MAX_REDIRECTS; hop++) {
     if (!isImageUrl(current)) throw new Error(`Refusing to download ${current}`);
     const response = await fetch(current, {
-      headers: { 'user-agent': USER_AGENT },
+      headers: { 'user-agent': USER_AGENT, referer },
       redirect: 'manual',
       signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
     });
@@ -78,12 +78,12 @@ async function fetchFollowing(start: string): Promise<Response> {
   throw new Error(`Too many redirects for ${start}`);
 }
 
-async function download(url: string): Promise<string> {
+async function download({ url, source }: Candidate): Promise<string> {
   mkdirSync(downloadsDir, { recursive: true });
   const file = resolve(downloadsDir, createHash('sha256').update(url).digest('hex'));
   if (existsSync(file)) return file;
   if (!isImageUrl(url)) throw new Error(`Refusing to download ${url}`);
-  const response = await fetchFollowing(url);
+  const response = await fetchFollowing(url, source);
   if (!response.ok) throw new Error(`HTTP ${response.status} for ${url}`);
   const declared = Number(response.headers.get('content-length') ?? 0);
   if (declared > MAX_DOWNLOAD_BYTES) throw new Error(`Too large: ${url}`);
@@ -145,7 +145,7 @@ for (const { character, kept } of plan) {
   const entries: { file: string; style: string }[] = [];
   for (const [index, candidate] of kept.entries()) {
     const file = `pictures/${character.id}-${index + 1}.webp`;
-    toWebp(await download(candidate.url), resolve(publicDir, file));
+    toWebp(await download(candidate), resolve(publicDir, file));
     const size = statSync(resolve(publicDir, file)).size;
     console.log(`${file}: ${Math.round(size / 1024)} KB`);
     const style = choices[candidate.url]?.style;
