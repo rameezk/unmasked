@@ -13,12 +13,13 @@ const paths: [string, string][] = [
 ];
 
 for (const [name, path] of paths) {
-  test(`${name} carries the security headers`, async ({ request }) => {
+  test(`${name} carries the security and noindex headers`, async ({ request }) => {
     const response = await request.get(path);
 
     const headers = response.headers();
     expect(headers['content-security-policy']).toBe("frame-ancestors 'none'");
     expect(headers['x-content-type-options']).toBe('nosniff');
     expect(headers['referrer-policy']).toBe('strict-origin-when-cross-origin');
+    expect(headers['x-robots-tag']).toBe('noindex, nofollow');
   });
 }
