@@ -3,7 +3,8 @@ import { characters } from '../src/characters/characters';
 
 test.skip(({ isMobile }) => isMobile, 'responses do not depend on the device');
 
-const picture = characters.flatMap((character) => character.pictures)[0]?.file ?? '';
+const picture = characters.flatMap((character) => character.pictures)[0]?.file;
+if (!picture) throw new Error('no Picture in the Character data');
 
 const paths: [string, string][] = [
   ['the home page', '/'],
