@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview --port 4173 --strictPort",
+    "preview": "wrangler dev --port 4173 --ip 127.0.0.1",
     "typecheck": "svelte-check --tsconfig ./tsconfig.json",
     "lint": "eslint . && prettier --check .",
     "format": "prettier --write .",
