@@ -208,7 +208,7 @@ test.describe('Type mode', () => {
   });
 });
 
-test.describe('Remembered settings and best Scores', () => {
+test.describe('Start choices and best Scores', () => {
   async function playRound(page: Page, correct: number) {
     for (let i = 0; i < 10; i++) {
       const character = await shownCharacter(page);
@@ -230,7 +230,7 @@ test.describe('Remembered settings and best Scores', () => {
     await expect(page.getByTestId('best-score')).toHaveCount(0);
   });
 
-  test('settings and best Scores persist per combination, and a lower Score does not replace the best', async ({
+  test('best Scores persist per combination across a reload while the choices reset, and a lower Score does not replace the best', async ({
     page,
   }) => {
     await start(page, 'Pro');
@@ -249,10 +249,12 @@ test.describe('Remembered settings and best Scores', () => {
     await page.getByRole('button', { name: 'Play' }).click();
     await playRound(page, 3);
     await page.getByRole('button', { name: 'Play again' }).click();
+    await expect(page.getByLabel('Pick')).toBeChecked();
+    await expect(page.getByLabel('Legend')).toBeChecked();
 
     await page.reload();
     await expect(page.getByLabel('Pick')).toBeChecked();
-    await expect(page.getByLabel('Legend')).toBeChecked();
+    await expect(page.getByLabel('Rookie')).toBeChecked();
     await expect(page.getByTestId('best-score')).toHaveCount(2);
     await expect(page.getByTestId('best-score').filter({ hasText: 'Pick + Pro' })).toContainText(
       '8/10',
@@ -260,6 +262,45 @@ test.describe('Remembered settings and best Scores', () => {
     await expect(page.getByTestId('best-score').filter({ hasText: 'Pick + Legend' })).toContainText(
       '3/10',
     );
+  });
+
+  test('Play again keeps the Type and Legend choices within one visit', async ({ page }) => {
+    await page.goto('/?seed=1');
+    await page.getByLabel('Type').check();
+    await page.getByLabel('Legend').check();
+    await page.getByRole('button', { name: 'Play' }).click();
+    for (let i = 0; i < 10; i++) {
+      await page.getByRole('button', { name: 'Reveal' }).click();
+      await advance(page, i);
+    }
+    await page.getByRole('button', { name: 'Play again' }).click();
+    await expect(page.getByLabel('Type')).toBeChecked();
+    await expect(page.getByLabel('Legend')).toBeChecked();
+  });
+
+  test.describe('saved data from before the choices stopped being remembered', () => {
+    const legacy = JSON.stringify({ mode: 'type', pool: 'legend', best: { 'type:legend': 6 } });
+
+    test.beforeEach(async ({ page }) => {
+      await page.addInitScript((data) => localStorage.setItem('unmasked:v1', data), legacy);
+    });
+
+    test('the saved choices are ignored and the best Scores carry over', async ({ page }) => {
+      await page.goto('/?seed=1');
+      await expect(page.getByLabel('Pick')).toBeChecked();
+      await expect(page.getByLabel('Rookie')).toBeChecked();
+      await expect(page.getByTestId('best-score')).toHaveCount(1);
+      await expect(page.getByTestId('best-score')).toContainText('Type + Legend');
+      await expect(page.getByTestId('best-score')).toContainText('6/10');
+    });
+
+    test('the saved choices drop out when a new best Score is recorded', async ({ page }) => {
+      await page.goto('/?seed=1');
+      await page.getByRole('button', { name: 'Play' }).click();
+      await playRound(page, 10);
+      const stored = await page.evaluate(() => localStorage.getItem('unmasked:v1'));
+      expect(JSON.parse(stored!)).toEqual({ best: { 'type:legend': 6, 'pick:rookie': 10 } });
+    });
   });
 
   test('corrupt saved data falls back to the defaults and a Round still plays', async ({

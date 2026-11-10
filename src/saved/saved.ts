@@ -6,34 +6,21 @@ export interface KeyValueStore {
   setItem(key: string, value: string): void;
 }
 
-export interface Settings {
-  mode: Mode;
-  pool: Tier;
-}
-
 export interface Saved {
-  settings(): Settings;
-  saveSettings(settings: Settings): void;
   bestScore(mode: Mode, pool: Tier): number | null;
   recordScore(mode: Mode, pool: Tier, score: number): void;
 }
 
 const STORAGE_KEY = 'unmasked:v1';
 
-const DEFAULT_SETTINGS: Settings = { mode: 'pick', pool: 'rookie' };
-
 interface Data {
-  settings: Settings;
   best: Record<string, number>;
 }
 
 const comboKey = (mode: Mode, pool: Tier) => `${mode}:${pool}`;
 
-const isMode = (value: unknown): value is Mode => MODES.some((m) => m === value);
-const isTier = (value: unknown): value is Tier => TIERS.some((t) => t === value);
-
 function parse(raw: string | null): Data {
-  const data: Data = { settings: { ...DEFAULT_SETTINGS }, best: {} };
+  const data: Data = { best: {} };
   if (raw === null) return data;
   let parsed: unknown;
   try {
@@ -43,8 +30,6 @@ function parse(raw: string | null): Data {
   }
   if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) return data;
   const record = parsed as Record<string, unknown>;
-  if (isMode(record.mode)) data.settings.mode = record.mode;
-  if (isTier(record.pool)) data.settings.pool = record.pool;
   const best = record.best;
   if (typeof best === 'object' && best !== null && !Array.isArray(best)) {
     for (const mode of MODES) {
@@ -77,21 +62,13 @@ export function createSaved(store: KeyValueStore | null): Saved {
 
   function persist() {
     try {
-      store?.setItem(
-        STORAGE_KEY,
-        JSON.stringify({ mode: data.settings.mode, pool: data.settings.pool, best: data.best }),
-      );
+      store?.setItem(STORAGE_KEY, JSON.stringify({ best: data.best }));
     } catch {
       return;
     }
   }
 
   return {
-    settings: () => ({ ...data.settings }),
-    saveSettings(settings) {
-      data.settings = { mode: settings.mode, pool: settings.pool };
-      persist();
-    },
     bestScore: (mode, pool) => data.best[comboKey(mode, pool)] ?? null,
     recordScore(mode, pool, score) {
       const key = comboKey(mode, pool);
