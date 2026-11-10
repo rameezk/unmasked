@@ -47,3 +47,7 @@ _Avoid_: easy mode, hard mode, difficulty
 **Score**:
 The number of Cards guessed correctly in a Round, shown out of the Round length (e.g. 7/10).
 _Avoid_: stars, points
+
+**Missed**:
+A Card that did not count towards the Score, either because a wrong name was picked first in Pick mode or because it was revealed in Type mode.
+_Avoid_: wrong, incorrect, failed
