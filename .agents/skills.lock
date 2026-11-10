@@ -5,9 +5,11 @@ skill before-after
 skill code-review
 skill decision-context
 skill git-branching
+skill git-cleanup
 skill git-committing
 skill git-pr
 skill git-pr-address-comments
+skill git-pr-resolve-conflicts
 skill git-worktree
 skill refine
 skill security-review
