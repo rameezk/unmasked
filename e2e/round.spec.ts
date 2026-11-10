@@ -25,6 +25,30 @@ async function advance(page: Page, index: number) {
   await page.getByRole('button', { name: index === 9 ? 'Finish' : 'Next' }).click();
 }
 
+async function rosterEntries(page: Page) {
+  const listed = await page.getByTestId('round-character').allTextContents();
+  return listed.map((entry) => entry.trim());
+}
+
+async function playPickRound(page: Page, missedCards: number[]) {
+  const played: string[] = [];
+  for (let i = 0; i < 10; i++) {
+    const character = await shownCharacter(page);
+    played.push(character.name);
+    if (missedCards.includes(i)) {
+      const wrong = (await choiceNames(page)).find((n) => n !== character.name)!;
+      await page.getByRole('button', { name: wrong, exact: true }).click();
+    }
+    await page.getByRole('button', { name: character.name, exact: true }).click();
+    await advance(page, i);
+  }
+  return played;
+}
+
+function rosterOf(played: string[], missedCards: number[]) {
+  return played.map((name, i) => `${name} - ${missedCards.includes(i) ? 'missed' : 'guessed'}`);
+}
+
 async function playPerfectRound(page: Page) {
   for (let i = 0; i < 10; i++) {
     const character = await shownCharacter(page);
@@ -47,9 +71,8 @@ test('a Legend Round shows ten distinct Characters and ends with the Score', asy
   }
   expect(new Set(seen).size).toBe(10);
   await expect(page.getByTestId('score')).toHaveText('10/10');
-  const listed = await page.getByTestId('round-character').allTextContents();
-  const expected = seen.map((id) => characters.find((c) => c.id === id)!.name);
-  expect(listed.map((n) => n.trim()).sort()).toEqual(expected.sort());
+  const expected = seen.map((id) => `${characters.find((c) => c.id === id)!.name} - guessed`);
+  expect(await rosterEntries(page)).toEqual(expected);
 });
 
 test('a wrong tap greys the button out and the right tap reveals without scoring', async ({
@@ -73,6 +96,23 @@ test('a wrong tap greys the button out and the right tap reveals without scoring
     await advance(page, i);
   }
   await expect(page.getByTestId('score')).toHaveText('9/10');
+});
+
+test('a wrong first pick in Pick mode marks that Character as missed', async ({ page }) => {
+  await start(page, 'Rookie');
+  const played = await playPickRound(page, [3]);
+  await expect(page.getByTestId('score')).toHaveText('9/10');
+  expect(await rosterEntries(page)).toEqual(rosterOf(played, [3]));
+});
+
+test('the number of missed pills equals ten minus the Score', async ({ page }) => {
+  await start(page, 'Rookie');
+  const missedCards = [0, 2, 3, 7];
+  const played = await playPickRound(page, missedCards);
+  await expect(page.getByTestId('score')).toHaveText('6/10');
+  const entries = await rosterEntries(page);
+  expect(entries.filter((entry) => entry.endsWith(' - missed'))).toHaveLength(4);
+  expect(entries).toEqual(rosterOf(played, missedCards));
 });
 
 test('Pro Rounds only use Rookie and Pro Characters', async ({ page }) => {
@@ -131,6 +171,24 @@ test.describe('Type mode', () => {
       await advance(page, i);
     }
     await expect(page.getByTestId('score')).toHaveText('9/10');
+  });
+
+  test('a revealed Card marks that Character as missed', async ({ page }) => {
+    await startType(page);
+    const played: string[] = [];
+    for (let i = 0; i < 10; i++) {
+      const character = await shownCharacter(page);
+      played.push(character.name);
+      if (i === 4) {
+        await page.getByRole('button', { name: 'Reveal' }).click();
+      } else {
+        await page.getByRole('textbox').fill(character.name);
+        await page.keyboard.press('Enter');
+      }
+      await advance(page, i);
+    }
+    await expect(page.getByTestId('score')).toHaveText('9/10');
+    expect(await rosterEntries(page)).toEqual(rosterOf(played, [4]));
   });
 
   test('Aliases are accepted', async ({ page }) => {
@@ -359,5 +417,16 @@ test.describe('Reduced motion', () => {
     await expect(page.getByTestId('score')).toHaveText('10/10');
     await expect(page.getByTestId('round-character')).toHaveCount(10);
     await expect(page.getByTestId('round-character').first()).toBeVisible();
+  });
+
+  test('the guessed and missed marks show without animation', async ({ page }) => {
+    await start(page, 'Rookie');
+    await playPickRound(page, [2]);
+    const marks = page.getByTestId('round-mark');
+    await expect(marks).toHaveCount(10);
+    for (const mark of await marks.all()) {
+      await expect(mark).toBeVisible();
+      await expect(mark).toHaveCSS('animation-name', 'none');
+    }
   });
 });
