@@ -95,24 +95,24 @@ test.describe('Logo returns to Start', () => {
     await expect(page.getByTestId('best-score')).toHaveText(['Pick + Rookie: 10/10']);
   });
 
-  test('goes from About to Start, as does the Back link, with no hash', async ({ page }) => {
-    await openStart(page);
-    for (const leave of [
-      () => logo(page).click(),
-      () => page.getByRole('link', { name: 'Back' }).click(),
-    ]) {
+  for (const [name, leave] of [
+    ['the logo', (page: Page) => logo(page).click()],
+    ['the Back link', (page: Page) => page.getByRole('link', { name: 'Back' }).click()],
+  ] as const) {
+    test(`goes from About to Start with ${name} and no hash`, async ({ page }) => {
+      await openStart(page);
       await page.getByRole('link', { name: 'About' }).click();
       await expect(page.getByRole('region', { name: 'About' })).toBeVisible();
       await markPage(page);
 
-      await leave();
+      await leave(page);
 
       await expectStart(page);
       expect(new URL(page.url()).hash).toBe('');
       expect(new URL(page.url()).search).toBe('?seed=1');
       await expectNotReloaded(page);
-    }
-  });
+    });
+  }
 
   test('does nothing visible on Start', async ({ page }) => {
     await openStart(page);
@@ -183,6 +183,24 @@ test.describe('Browser back returns to Start', () => {
     await openStart(page);
     await page.getByRole('button', { name: 'Play' }).click();
     await playCards(page, 3);
+    await logo(page).click();
+    await expectStart(page);
+
+    await page.goBack();
+
+    expect(page.url()).toBe('about:blank');
+  });
+
+  test('back from Start leaves the app after a reload mid-Round and a later Round left by the logo', async ({
+    page,
+  }) => {
+    await page.goto('about:blank');
+    await openStart(page);
+    await page.getByRole('button', { name: 'Play' }).click();
+    await playCards(page, 2);
+    await page.reload();
+    await expectStart(page);
+    await page.getByRole('button', { name: 'Play' }).click();
     await logo(page).click();
     await expectStart(page);
 

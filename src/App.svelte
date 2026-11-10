@@ -42,7 +42,7 @@
   let round = $state<Round | null>(null);
   let page = $state<'game' | 'about'>(location.hash === '#about' ? 'about' : 'game');
 
-  const startHref = location.pathname + location.search;
+  const startHref = import.meta.env.BASE_URL + location.search;
 
   const confetti = Array.from({ length: 14 }, (_, i) => ({
     left: 4 + i * 7,
@@ -99,14 +99,18 @@
     page = location.hash === '#about' ? 'about' : 'game';
   }
 
-  function leaveRound() {
+  function dropRound() {
     round = null;
     typed = '';
+  }
+
+  function leaveRound() {
+    dropRound();
     if (history.state?.round) history.back();
   }
 
-  function showHistoryEntry() {
-    if (round !== null) leaveRound();
+  function onPopState() {
+    if (round !== null) dropRound();
     else if (history.state?.round) history.back();
   }
 
@@ -121,7 +125,7 @@
   }
 </script>
 
-<svelte:window onhashchange={showPage} onpopstate={showHistoryEntry} />
+<svelte:window onhashchange={showPage} onpopstate={onPopState} />
 
 <main>
   <h1>
