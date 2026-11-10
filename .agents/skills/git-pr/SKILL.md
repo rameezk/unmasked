@@ -13,9 +13,10 @@ description: Prepare and open a GitHub pull request cleanly and consistently. Us
 Assumes commits are already made via [[git-committing]] and the branch
 follows [[git-branching]]'s naming convention.
 
-Each `[[name]]` here is another skill: when a step hands work to one, load that
-skill and follow its instructions in full before doing the step. Never do the
-step from the summary here.
+Each `[[name]]` here is another skill, whose file is `../<name>/SKILL.md`
+beside this skill's own: when a step hands work to one, load that skill by
+reading that file and follow its instructions in full before doing the step.
+Never do the step from the summary here.
 
 ## Title format
 
@@ -71,9 +72,9 @@ commit a review saw, so never write one a review did not report.
    the PR will contain.
 2. Review the diff: `git diff <default>...HEAD` so the title and description
    reflect what actually changed. Never write a PR description blind.
-3. Run [[before-after]] and include the `## Before / After` section it returns.
-   It returns nothing when the change has no visual effect; drop the section
-   then.
+3. Run [[before-after]] and include the `## Before / After` section it returns,
+   exactly as given. It returns nothing when the change has no visual effect;
+   drop the section then.
 4. Draft the title and description following the formats above.
 5. Push the branch: `git push -u origin <branch>` (skip only if it is already
    pushed and up to date). `gh` needs the branch on the remote.
@@ -85,7 +86,18 @@ commit a review saw, so never write one a review did not report.
      --title "<title>" \
      --body "<description>"
    ```
-7. Once the PR exists, report its URL.
+
+   A description with a `## Before / After` section is written to a file
+   first, passes [[before-after]]'s link check, and goes up with `--body-file
+   <file>` instead of `--body`.
+
+   When the caller asks for a draft, add `--draft`. A draft is a PR that is not
+   ready for review yet: GitHub does not request reviews from code owners until
+   it is marked ready. GitHub refuses drafts on repositories whose plan lacks
+   them, such as a private repository owned by an organization on the free
+   plan; if it refuses, create the PR without `--draft` and tell the caller it
+   opened ready for review.
+7. Once the PR exists, report its URL and whether it is a draft.
 
 ## Guardrails
 
