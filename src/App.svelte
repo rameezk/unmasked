@@ -34,9 +34,8 @@
   ];
 
   const saved = createSaved(browserStore());
-  const initial = saved.settings();
-  let mode = $state<Mode>(initial.mode);
-  let pool = $state<Tier>(initial.pool);
+  let mode = $state<Mode>('pick');
+  let pool = $state<Tier>('rookie');
   let bestScores = $state(readBestScores());
   let typed = $state('');
   let round = $state<Round | null>(null);
@@ -64,7 +63,6 @@
   }
 
   function play() {
-    saved.saveSettings({ mode, pool });
     typed = '';
     round = startRound({ characters, mode, pool, random });
   }

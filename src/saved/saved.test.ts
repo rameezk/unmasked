@@ -24,16 +24,9 @@ const throwingStore: KeyValueStore = {
 };
 
 describe('createSaved', () => {
-  it('given no saved data, defaults to Pick + Rookie with no best Scores', () => {
+  it('given no saved data, has no best Scores', () => {
     const saved = createSaved(memoryStore());
-    expect(saved.settings()).toEqual({ mode: 'pick', pool: 'rookie' });
     expect(saved.bestScore('pick', 'rookie')).toBeNull();
-  });
-
-  it('given remembered settings, a new session restores them', () => {
-    const store = memoryStore();
-    createSaved(store).saveSettings({ mode: 'type', pool: 'legend' });
-    expect(createSaved(store).settings()).toEqual({ mode: 'type', pool: 'legend' });
   });
 
   it('given a previous best of 6, a Score of 8 replaces it only for its own combination', () => {
@@ -73,7 +66,6 @@ describe('createSaved', () => {
     ],
   ])('given corrupt saved data (%s), falls back to defaults', (_name, raw) => {
     const saved = createSaved(memoryStore({ 'unmasked:v1': raw }));
-    expect(saved.settings()).toEqual({ mode: 'pick', pool: 'rookie' });
     expect(saved.bestScore('pick', 'rookie')).toBeNull();
     expect(saved.bestScore('pick', 'pro')).toBeNull();
     expect(saved.bestScore('type', 'pro')).toBeNull();
@@ -84,8 +76,6 @@ describe('createSaved', () => {
     ['unavailable storage', null],
   ])('given %s, still works in memory without throwing', (_name, store) => {
     const saved = createSaved(store);
-    expect(saved.settings()).toEqual({ mode: 'pick', pool: 'rookie' });
-    saved.saveSettings({ mode: 'type', pool: 'pro' });
     saved.recordScore('type', 'pro', 4);
     expect(saved.bestScore('type', 'pro')).toBe(4);
   });
