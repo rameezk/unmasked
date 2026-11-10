@@ -223,8 +223,14 @@
       </div>
       <p class="score-burst" data-testid="score">{roundScore(round)}/{ROUND_LENGTH}</p>
       <ul class="roster">
-        {#each round.cards as c (c.character.id)}
-          <li data-testid="round-character">{c.character.name}</li>
+        {#each round.cards as c, i (c.character.id)}
+          {@const guessed = c.scored === true}
+          <li data-testid="round-character" class:missed={!guessed} style="--i: {i}">
+            <span class="mark" class:guessed data-testid="round-mark" aria-hidden="true"></span>
+            <span class="roster-name">{c.character.name}</span><span class="sr-only"
+              >{guessed ? ' - guessed' : ' - missed'}</span
+            >
+          </li>
         {/each}
       </ul>
       <button type="button" class="big primary" onclick={backToStart}>Play again</button>
@@ -237,6 +243,7 @@
     --red: #e62429;
     --yellow: #ffd400;
     --blue: #1f5fd6;
+    --green: #1b8a3a;
     --ink: #111;
     --paper: #fffbe8;
     --outline: 3px solid var(--ink);
@@ -566,7 +573,7 @@
   }
   .choices .correct {
     color: white;
-    background: #1b8a3a;
+    background: var(--green);
     text-decoration: none;
   }
   form {
@@ -586,6 +593,7 @@
     border-radius: 12px;
   }
   .end {
+    --score-pop: 0.6s;
     position: relative;
     display: grid;
     gap: 1rem;
@@ -608,7 +616,7 @@
     border: var(--outline);
     border-radius: 50%;
     box-shadow: 6px 6px 0 var(--ink);
-    animation: burst-pop 0.6s cubic-bezier(0.2, 1.6, 0.4, 1);
+    animation: burst-pop var(--score-pop) cubic-bezier(0.2, 1.6, 0.4, 1);
   }
   .roster {
     display: flex;
@@ -620,11 +628,66 @@
     list-style: none;
   }
   .roster li {
-    padding: 0.2rem 0.7rem;
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.2rem 0.7rem 0.2rem 0.3rem;
     font-weight: 600;
     background: var(--paper);
     border: 2px solid var(--ink);
     border-radius: 999px;
+  }
+  .roster li.missed {
+    color: #5a5a5a;
+    background: #dcdcdc;
+  }
+  .roster li.missed .roster-name {
+    text-decoration: line-through;
+    text-decoration-color: var(--red);
+    text-decoration-thickness: 3px;
+  }
+  .mark {
+    display: grid;
+    place-items: center;
+    flex: none;
+    width: 1.3rem;
+    height: 1.3rem;
+    font-size: 0.85rem;
+    font-weight: 700;
+    line-height: 1;
+    color: white;
+    background: var(--red);
+    border-radius: 50%;
+    animation: mark-pop 0.45s cubic-bezier(0.2, 1.6, 0.4, 1)
+      calc(var(--score-pop) + var(--i) * 0.1s) backwards;
+  }
+  .mark::before {
+    content: '\2717';
+  }
+  .mark.guessed {
+    background: var(--green);
+  }
+  .mark.guessed::before {
+    content: '\2713';
+  }
+  @keyframes mark-pop {
+    from {
+      opacity: 0;
+      transform: scale(0.1) rotate(-25deg);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1) rotate(0deg);
+    }
+  }
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
   }
   .celebration {
     position: absolute;
@@ -653,7 +716,8 @@
       display: none;
     }
     .burst span,
-    .score-burst {
+    .score-burst,
+    .mark {
       animation: none;
     }
   }
