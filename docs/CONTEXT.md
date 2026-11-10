@@ -36,6 +36,10 @@ _Avoid_: question, turn
 A fixed sequence of Cards played as one game, currently ten.
 _Avoid_: game, session, level
 
+**Start**:
+The screen where the player picks a Mode and Pool and begins a Round.
+_Avoid_: home, menu
+
 **Alias**:
 An extra accepted spelling of a Character's name for typed answers, such as "cap" for Captain America.
 _Avoid_: nickname, synonym
