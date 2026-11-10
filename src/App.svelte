@@ -42,6 +42,8 @@
   let round = $state<Round | null>(null);
   let page = $state<'game' | 'about'>(location.hash === '#about' ? 'about' : 'game');
 
+  const startHref = import.meta.env.BASE_URL + location.search;
+
   const confetti = Array.from({ length: 14 }, (_, i) => ({
     left: 4 + i * 7,
     delay: (i % 5) * 0.15,
@@ -67,6 +69,7 @@
     saved.saveSettings({ mode, pool });
     typed = '';
     round = startRound({ characters, mode, pool, random });
+    history.pushState({ round: true }, '');
   }
 
   function pick(id: string) {
@@ -96,15 +99,38 @@
     page = location.hash === '#about' ? 'about' : 'game';
   }
 
-  function backToStart() {
+  function dropRound() {
     round = null;
+    typed = '';
+  }
+
+  function leaveRound() {
+    dropRound();
+    if (history.state?.round) history.back();
+  }
+
+  function onPopState() {
+    if (round !== null) dropRound();
+    else if (history.state?.round) history.back();
+  }
+
+  function goToStart(event: MouseEvent) {
+    event.preventDefault();
+    if (round !== null) {
+      leaveRound();
+    } else if (page === 'about') {
+      history.pushState(null, '', startHref);
+      page = 'game';
+    }
   }
 </script>
 
-<svelte:window onhashchange={showPage} />
+<svelte:window onhashchange={showPage} onpopstate={onPopState} />
 
 <main>
-  <h1><a href="#start" class="logo">unmasked</a></h1>
+  <h1>
+    <a href={startHref} class="logo" onclick={goToStart}>unmasked</a>
+  </h1>
 
   {#if page === 'about'}
     <section aria-label="About" class="panel about">
@@ -113,7 +139,7 @@
         The characters and artwork in this game belong to Marvel. unmasked is an unofficial fan game
         and is not made, endorsed or sponsored by Marvel.
       </p>
-      <a class="button" href="#start">Back</a>
+      <a class="button" href={startHref} onclick={goToStart}>Back</a>
     </section>
   {:else if round === null}
     <section aria-label="Start" class="start">
@@ -233,7 +259,7 @@
           </li>
         {/each}
       </ul>
-      <button type="button" class="big primary" onclick={backToStart}>Play again</button>
+      <button type="button" class="big primary" onclick={leaveRound}>Play again</button>
     </section>
   {/if}
 </main>
@@ -279,11 +305,16 @@
     line-height: 1;
   }
   .logo {
+    display: inline-block;
     color: var(--red);
     text-decoration: none;
     -webkit-text-stroke: 2px var(--ink);
     paint-order: stroke fill;
     text-shadow: 3px 3px 0 var(--ink);
+  }
+  .logo:active {
+    transform: translate(3px, 3px);
+    text-shadow: none;
   }
   h2 {
     margin: 0 0 0.5rem;
