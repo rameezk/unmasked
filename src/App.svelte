@@ -593,6 +593,7 @@
     border-radius: 12px;
   }
   .end {
+    --score-pop: 0.6s;
     position: relative;
     display: grid;
     gap: 1rem;
@@ -615,7 +616,7 @@
     border: var(--outline);
     border-radius: 50%;
     box-shadow: 6px 6px 0 var(--ink);
-    animation: burst-pop 0.6s cubic-bezier(0.2, 1.6, 0.4, 1);
+    animation: burst-pop var(--score-pop) cubic-bezier(0.2, 1.6, 0.4, 1);
   }
   .roster {
     display: flex;
@@ -627,6 +628,7 @@
     list-style: none;
   }
   .roster li {
+    position: relative;
     display: inline-flex;
     align-items: center;
     gap: 0.4rem;
@@ -657,7 +659,8 @@
     color: white;
     background: var(--red);
     border-radius: 50%;
-    animation: mark-pop 0.45s cubic-bezier(0.2, 1.6, 0.4, 1) calc(0.6s + var(--i) * 0.1s) backwards;
+    animation: mark-pop 0.45s cubic-bezier(0.2, 1.6, 0.4, 1)
+      calc(var(--score-pop) + var(--i) * 0.1s) backwards;
   }
   .mark::before {
     content: '\2717';
