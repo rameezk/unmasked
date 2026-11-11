@@ -64,7 +64,9 @@ test.describe('Logo returns to Start', () => {
     expect(new URL(page.url()).hash).toBe('');
     expect(new URL(page.url()).search).toBe('?seed=1');
     await expectNotReloaded(page);
-    await expect(page.getByTestId('best-score')).toHaveText(['Pick + Rookie: 10/10']);
+    await expect(page.getByTestId('best-score')).toHaveText('No best yet');
+    await page.getByLabel('Rookie').check();
+    await expect(page.getByTestId('best-score')).toHaveText('10/10');
   });
 
   test('leaves a Type Round in progress and the next Round starts clean', async ({ page }) => {
@@ -92,7 +94,7 @@ test.describe('Logo returns to Start', () => {
     await logo(page).click();
 
     await expectStart(page);
-    await expect(page.getByTestId('best-score')).toHaveText(['Pick + Rookie: 10/10']);
+    await expect(page.getByTestId('best-score')).toHaveText('10/10');
   });
 
   for (const [name, leave] of [
@@ -150,7 +152,7 @@ test.describe('Browser back returns to Start', () => {
     await expectStart(page);
     expect(page.url()).toBe(before);
     await expectNotReloaded(page);
-    await expect(page.getByTestId('best-score')).toHaveCount(0);
+    await expect(page.getByTestId('best-score')).toHaveText('No best yet');
   });
 
   test('one press leaves the End of Round screen', async ({ page }) => {

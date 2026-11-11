@@ -31,16 +31,17 @@ const cast: Character[] = tiers.flatMap((tier) =>
 const tierOf = (id: string) => cast.find((c) => c.id === id)!.tier;
 
 describe('startRound', () => {
-  it('deals ten distinct Characters', () => {
+  it('deals the chosen number of distinct Characters', () => {
     const round = startRound({
       characters: cast,
       mode: 'pick',
       pool: 'legend',
+      cards: 20,
       random: seededRandom(1),
     });
     const ids = round.cards.map((c) => c.character.id);
-    expect(ids).toHaveLength(10);
-    expect(new Set(ids).size).toBe(10);
+    expect(ids).toHaveLength(20);
+    expect(new Set(ids).size).toBe(20);
   });
 
   it('draws Rookie Cards and choices only from Rookie Characters', () => {
@@ -49,6 +50,7 @@ describe('startRound', () => {
         characters: cast,
         mode: 'pick',
         pool: 'rookie',
+        cards: 10,
         random: seededRandom(seed),
       });
       for (const card of round.cards) {
@@ -64,6 +66,7 @@ describe('startRound', () => {
         characters: cast,
         mode: 'pick',
         pool: 'pro',
+        cards: 10,
         random: seededRandom(seed),
       });
       expect(round.cards.every((c) => tierOf(c.character.id) !== 'legend')).toBe(true);
@@ -74,6 +77,7 @@ describe('startRound', () => {
           characters: cast,
           mode: 'pick',
           pool: 'pro',
+          cards: 10,
           random: seededRandom(seed),
         }).cards.map((c) => tierOf(c.character.id)),
       ).flat(),
@@ -88,6 +92,7 @@ describe('startRound', () => {
         characters: cast,
         mode: 'pick',
         pool: 'legend',
+        cards: 10,
         random: seededRandom(seed),
       });
       for (const card of round.cards) {
@@ -105,6 +110,7 @@ describe('startRound', () => {
       characters: cast,
       mode: 'pick',
       pool: 'legend',
+      cards: 10,
       random: seededRandom(3),
     });
     for (const card of round.cards) {
@@ -117,12 +123,14 @@ describe('startRound', () => {
       characters: cast,
       mode: 'pick',
       pool: 'legend',
+      cards: 10,
       random: seededRandom(7),
     });
     const b = startRound({
       characters: cast,
       mode: 'pick',
       pool: 'legend',
+      cards: 10,
       random: seededRandom(7),
     });
     expect(a).toEqual(b);
@@ -135,6 +143,7 @@ describe('answerPick', () => {
       characters: cast,
       mode: 'pick',
       pool: 'rookie',
+      cards: 10,
       random: seededRandom(5),
     });
 
@@ -168,21 +177,22 @@ describe('answerPick', () => {
 });
 
 describe('nextCard', () => {
-  it('finishes after ten Cards with the Score out of ten', () => {
+  it('finishes after the chosen number of Cards', () => {
     let round = startRound({
       characters: cast,
       mode: 'pick',
       pool: 'legend',
+      cards: 5,
       random: seededRandom(2),
     });
-    for (let i = 0; i < 10; i++) {
+    for (let i = 0; i < 5; i++) {
       expect(round.finished).toBe(false);
       round = answerPick(round, currentCard(round).character.id);
       round = nextCard(round);
     }
     expect(round.finished).toBe(true);
-    expect(roundScore(round)).toBe(10);
-    expect(round.cards).toHaveLength(10);
+    expect(roundScore(round)).toBe(5);
+    expect(round.cards).toHaveLength(5);
   });
 
   it('does not advance past an unrevealed Card', () => {
@@ -190,6 +200,7 @@ describe('nextCard', () => {
       characters: cast,
       mode: 'pick',
       pool: 'legend',
+      cards: 10,
       random: seededRandom(2),
     });
     expect(nextCard(round)).toEqual(round);
@@ -219,6 +230,7 @@ describe('Type mode', () => {
         characters: typeCast,
         mode: 'type',
         pool: 'rookie',
+        cards: 10,
         random: seededRandom(seed),
       });
       if (currentCard(round).character.name === name) return round;
@@ -264,6 +276,7 @@ describe('Type mode', () => {
       characters: cast,
       mode: 'pick',
       pool: 'rookie',
+      cards: 10,
       random: seededRandom(5),
     });
     const name = currentCard(pick).character.name;
@@ -272,6 +285,7 @@ describe('Type mode', () => {
       characters: cast,
       mode: 'type',
       pool: 'rookie',
+      cards: 10,
       random: seededRandom(5),
     });
     expect(answerPick(typeRound, currentCard(typeRound).character.id)).toEqual(typeRound);

@@ -223,11 +223,11 @@ test.describe('Start choices and best Scores', () => {
     }
   }
 
-  test('first visit selects Pick + Rookie and shows no best Scores', async ({ page }) => {
+  test('first visit selects Pick + Rookie and shows no best Score', async ({ page }) => {
     await page.goto('/?seed=1');
     await expect(page.getByLabel('Pick')).toBeChecked();
     await expect(page.getByLabel('Rookie')).toBeChecked();
-    await expect(page.getByTestId('best-score')).toHaveCount(0);
+    await expect(page.getByTestId('best-score')).toHaveText('No best yet');
   });
 
   test('best Scores persist per combination across a reload while the choices reset, and a lower Score does not replace the best', async ({
@@ -255,13 +255,11 @@ test.describe('Start choices and best Scores', () => {
     await page.reload();
     await expect(page.getByLabel('Pick')).toBeChecked();
     await expect(page.getByLabel('Rookie')).toBeChecked();
-    await expect(page.getByTestId('best-score')).toHaveCount(2);
-    await expect(page.getByTestId('best-score').filter({ hasText: 'Pick + Pro' })).toContainText(
-      '8/10',
-    );
-    await expect(page.getByTestId('best-score').filter({ hasText: 'Pick + Legend' })).toContainText(
-      '3/10',
-    );
+    await expect(page.getByTestId('best-score')).toHaveText('No best yet');
+    await page.getByLabel('Pro').check();
+    await expect(page.getByTestId('best-score')).toHaveText('8/10');
+    await page.getByLabel('Legend').check();
+    await expect(page.getByTestId('best-score')).toHaveText('3/10');
   });
 
   test('Play again keeps the Type and Legend choices within one visit', async ({ page }) => {
@@ -289,9 +287,9 @@ test.describe('Start choices and best Scores', () => {
       await page.goto('/?seed=1');
       await expect(page.getByLabel('Pick')).toBeChecked();
       await expect(page.getByLabel('Rookie')).toBeChecked();
-      await expect(page.getByTestId('best-score')).toHaveCount(1);
-      await expect(page.getByTestId('best-score')).toContainText('Type + Legend');
-      await expect(page.getByTestId('best-score')).toContainText('6/10');
+      await page.getByLabel('Type').check();
+      await page.getByLabel('Legend').check();
+      await expect(page.getByTestId('best-score')).toHaveText('6/10');
     });
 
     test('the saved choices drop out when a new best Score is recorded', async ({ page }) => {
@@ -299,7 +297,7 @@ test.describe('Start choices and best Scores', () => {
       await page.getByRole('button', { name: 'Play' }).click();
       await playRound(page, 10);
       const stored = await page.evaluate(() => localStorage.getItem('unmasked:v1'));
-      expect(JSON.parse(stored!)).toEqual({ best: { 'type:legend': 6, 'pick:rookie': 10 } });
+      expect(JSON.parse(stored!)).toEqual({ best: { 'type:legend:10': 6, 'pick:rookie:10': 10 } });
     });
   });
 
