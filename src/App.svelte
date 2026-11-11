@@ -264,6 +264,7 @@
         {/each}
       </div>
       <p class="score-burst" data-testid="score">{roundScore(round)}/{round.cards.length}</p>
+      <button type="button" class="big primary" onclick={leaveRound}>Play again</button>
       <ul class="roster">
         {#each round.cards as c, i (c.character.id)}
           {@const guessed = c.scored === true}
@@ -275,7 +276,6 @@
           </li>
         {/each}
       </ul>
-      <button type="button" class="big primary" onclick={leaveRound}>Play again</button>
     </section>
   {/if}
 </main>

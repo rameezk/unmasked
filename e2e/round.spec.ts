@@ -105,6 +105,19 @@ test('a wrong first pick in Pick mode marks that Character as missed', async ({ 
   expect(await rosterEntries(page)).toEqual(rosterOf(played, [3]));
 });
 
+test('Play again sits directly after the Score and above the roster', async ({ page }) => {
+  await start(page, 'Rookie');
+  await playPickRound(page, [3]);
+  const order = await page
+    .getByRole('region', { name: 'End of Round' })
+    .locator('> [data-testid="score"], > button, > ul')
+    .evaluateAll((els) => els.map((el) => el.tagName));
+  expect(order).toEqual(['P', 'BUTTON', 'UL']);
+  const playAgain = await page.getByRole('button', { name: 'Play again' }).boundingBox();
+  const firstEntry = await page.getByTestId('round-character').first().boundingBox();
+  expect(playAgain!.y + playAgain!.height).toBeLessThan(firstEntry!.y);
+});
+
 test('the number of missed pills equals ten minus the Score', async ({ page }) => {
   await start(page, 'Rookie');
   const missedCards = [0, 2, 3, 7];
