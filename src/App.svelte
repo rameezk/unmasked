@@ -4,12 +4,13 @@
     answerType,
     currentCard,
     nextCard,
+    poolCharacters,
     revealCard,
     roundScore,
     startRound,
-    ROUND_LENGTH,
     type Round,
   } from './engine/round';
+  import { DEFAULT_CARDS, largestCardCount, stepCards } from './engine/cards';
   import type { Character, Mode, Random, Tier } from './engine/types';
   import '@fontsource/bangers/latin-400.css';
   import '@fontsource-variable/fredoka/wght.css';
@@ -36,7 +37,8 @@
   const saved = createSaved(browserStore());
   let mode = $state<Mode>('pick');
   let pool = $state<Tier>('rookie');
-  let bestScores = $state(readBestScores());
+  let cards = $state(DEFAULT_CARDS);
+  let recorded = $state(0);
   let typed = $state('');
   let round = $state<Round | null>(null);
   let page = $state<'game' | 'about'>(location.hash === '#about' ? 'about' : 'game');
@@ -49,24 +51,24 @@
     colour: ['var(--red)', 'var(--yellow)', 'var(--blue)'][i % 3],
   }));
 
+  const poolSize = $derived(poolCharacters(characters, pool).length);
+  const best = $derived.by(() => {
+    void recorded;
+    return saved.bestScore(mode, pool, cards);
+  });
   const card = $derived(round !== null && !round.finished ? currentCard(round) : null);
   const bursting = $derived(
     card !== null && card.revealed && (round?.mode === 'pick' || card.scored === true),
   );
 
-  function readBestScores() {
-    return modes.flatMap((m) =>
-      pools.flatMap((p) => {
-        const score = saved.bestScore(m.value, p.value);
-        if (score === null) return [];
-        return [{ key: `${m.value}:${p.value}`, label: `${m.label} + ${p.label}`, score }];
-      }),
-    );
+  function choosePool(value: Tier) {
+    pool = value;
+    cards = Math.min(cards, largestCardCount(poolCharacters(characters, value).length));
   }
 
   function play() {
     typed = '';
-    round = startRound({ characters, mode, pool, random });
+    round = startRound({ characters, mode, pool, cards, random });
     history.pushState({ round: true }, '');
   }
 
@@ -88,8 +90,8 @@
     if (!round) return;
     round = nextCard(round);
     if (round.finished) {
-      saved.recordScore(round.mode, round.pool, roundScore(round));
-      bestScores = readBestScores();
+      saved.recordScore(round.mode, round.pool, round.cards.length, roundScore(round));
+      recorded++;
     }
   }
 
@@ -157,22 +159,40 @@
         <div class="segments three">
           {#each pools as p (p.value)}
             <label class="segment">
-              <input type="radio" name="pool" value={p.value} bind:group={pool} />
+              <input
+                type="radio"
+                name="pool"
+                value={p.value}
+                checked={pool === p.value}
+                onchange={() => choosePool(p.value)}
+              />
               <span>{p.label}</span>
             </label>
           {/each}
         </div>
       </fieldset>
-      {#if bestScores.length > 0}
-        <div class="panel">
-          <h2>Best Scores</h2>
-          <ul class="scores">
-            {#each bestScores as best (best.key)}
-              <li data-testid="best-score">{best.label}: {best.score}/{ROUND_LENGTH}</li>
-            {/each}
-          </ul>
+      <fieldset class="panel">
+        <legend>Cards</legend>
+        <div class="stepper">
+          <button
+            type="button"
+            disabled={cards === stepCards(cards, -1, poolSize)}
+            onclick={() => (cards = stepCards(cards, -1, poolSize))}>−</button
+          >
+          <output data-testid="cards">{cards}</output>
+          <button
+            type="button"
+            disabled={cards === stepCards(cards, 1, poolSize)}
+            onclick={() => (cards = stepCards(cards, 1, poolSize))}>+</button
+          >
         </div>
-      {/if}
+      </fieldset>
+      <div class="panel">
+        <h2>Best Score</h2>
+        <p class="best" data-testid="best-score">
+          {best === null ? 'No best yet' : `${best}/${cards}`}
+        </p>
+      </div>
       <button type="button" class="big primary" onclick={play}>Play</button>
       <a class="about-link" href="#about">About</a>
     </section>
@@ -185,7 +205,7 @@
           width="240"
           height="320"
         />
-        <span class="counter">{round.index + 1} / {ROUND_LENGTH}</span>
+        <span class="counter">{round.index + 1} / {round.cards.length}</span>
         {#if bursting}
           <div class="burst" data-testid="burst" aria-hidden="true"><span>POW!</span></div>
         {/if}
@@ -232,7 +252,7 @@
       {/if}
       {#if card.revealed}
         <button type="button" class="big primary" onclick={next}>
-          {round.index + 1 >= ROUND_LENGTH ? 'Finish' : 'Next'}
+          {round.index + 1 >= round.cards.length ? 'Finish' : 'Next'}
         </button>
       {/if}
     </section>
@@ -245,7 +265,7 @@
           ></i>
         {/each}
       </div>
-      <p class="score-burst" data-testid="score">{roundScore(round)}/{ROUND_LENGTH}</p>
+      <p class="score-burst" data-testid="score">{roundScore(round)}/{round.cards.length}</p>
       <ul class="roster">
         {#each round.cards as c, i (c.character.id)}
           {@const guessed = c.scored === true}
@@ -380,12 +400,26 @@
     outline: 4px solid var(--blue);
     outline-offset: 2px;
   }
-  .scores {
-    margin: 0;
-    padding: 0;
-    list-style: none;
+  .stepper {
     display: grid;
-    gap: 0.25rem;
+    grid-template-columns: 4rem 1fr 4rem;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .stepper output {
+    text-align: center;
+    font-family: var(--display);
+    font-size: 2rem;
+    letter-spacing: 0.05em;
+  }
+  .stepper button {
+    font-size: 1.6rem;
+    line-height: 1;
+  }
+  .best {
+    margin: 0;
+    font-size: 1.3rem;
+    font-weight: 600;
   }
   button,
   .button {
@@ -423,6 +457,9 @@
     box-shadow: none;
     cursor: not-allowed;
     text-decoration: line-through;
+  }
+  .stepper button:disabled {
+    text-decoration: none;
   }
   .primary {
     color: white;

@@ -65,7 +65,7 @@ describe('the shipped character list', () => {
       seed = (seed * 1664525 + 1013904223) % 4294967296;
       return seed / 4294967296;
     };
-    const round = startRound({ characters, mode: 'pick', pool, random });
+    const round = startRound({ characters, mode: 'pick', pool, cards: 10, random });
     expect(new Set(round.cards.map((c) => c.character.id)).size).toBe(10);
     for (const card of round.cards) {
       expect(new Set(card.choices.map((c) => c.name)).size).toBe(4);

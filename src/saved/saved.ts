@@ -1,5 +1,5 @@
 import { MODES, TIERS, type Mode, type Tier } from '../engine/types';
-import { ROUND_LENGTH } from '../engine/round';
+import { CARD_COUNTS, DEFAULT_CARDS } from '../engine/cards';
 
 export interface KeyValueStore {
   getItem(key: string): string | null;
@@ -7,8 +7,8 @@ export interface KeyValueStore {
 }
 
 export interface Saved {
-  bestScore(mode: Mode, pool: Tier): number | null;
-  recordScore(mode: Mode, pool: Tier, score: number): void;
+  bestScore(mode: Mode, pool: Tier, cards: number): number | null;
+  recordScore(mode: Mode, pool: Tier, cards: number, score: number): void;
 }
 
 const STORAGE_KEY = 'unmasked:v1';
@@ -17,7 +17,7 @@ interface Data {
   best: Record<string, number>;
 }
 
-const comboKey = (mode: Mode, pool: Tier) => `${mode}:${pool}`;
+const comboKey = (mode: Mode, pool: Tier, cards: number) => `${mode}:${pool}:${cards}`;
 
 function parse(raw: string | null): Data {
   const data: Data = { best: {} };
@@ -32,16 +32,16 @@ function parse(raw: string | null): Data {
   const record = parsed as Record<string, unknown>;
   const best = record.best;
   if (typeof best === 'object' && best !== null && !Array.isArray(best)) {
+    const stored = best as Record<string, unknown>;
     for (const mode of MODES) {
       for (const pool of TIERS) {
-        const key = comboKey(mode, pool);
-        const value = (best as Record<string, unknown>)[key];
-        if (
-          Number.isInteger(value) &&
-          (value as number) >= 0 &&
-          (value as number) <= ROUND_LENGTH
-        ) {
-          data.best[key] = value as number;
+        for (const cards of CARD_COUNTS) {
+          const key = comboKey(mode, pool, cards);
+          const value =
+            stored[key] ?? (cards === DEFAULT_CARDS ? stored[`${mode}:${pool}`] : undefined);
+          if (Number.isInteger(value) && (value as number) >= 0 && (value as number) <= cards) {
+            data.best[key] = value as number;
+          }
         }
       }
     }
@@ -69,9 +69,9 @@ export function createSaved(store: KeyValueStore | null): Saved {
   }
 
   return {
-    bestScore: (mode, pool) => data.best[comboKey(mode, pool)] ?? null,
-    recordScore(mode, pool, score) {
-      const key = comboKey(mode, pool);
+    bestScore: (mode, pool, cards) => data.best[comboKey(mode, pool, cards)] ?? null,
+    recordScore(mode, pool, cards, score) {
+      const key = comboKey(mode, pool, cards);
       const previous = data.best[key];
       if (previous !== undefined && previous >= score) return;
       data.best[key] = score;

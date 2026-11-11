@@ -1,7 +1,6 @@
 import { TIERS, type Character, type Mode, type Picture, type Random, type Tier } from './types';
 import { normalise } from './normalise';
 
-export const ROUND_LENGTH = 10;
 export const CHOICE_COUNT = 4;
 
 export interface Card {
@@ -25,6 +24,7 @@ export interface StartRoundOptions {
   characters: readonly Character[];
   mode: Mode;
   pool: Tier;
+  cards: number;
   random: Random;
 }
 
@@ -42,12 +42,18 @@ function shuffle<T>(items: readonly T[], random: Random): T[] {
   return result;
 }
 
-export function startRound({ characters, mode, pool, random }: StartRoundOptions): Round {
+export function startRound({
+  characters,
+  mode,
+  pool,
+  cards: cardCount,
+  random,
+}: StartRoundOptions): Round {
   const available = poolCharacters(characters, pool);
-  if (available.length < ROUND_LENGTH) {
+  if (available.length < cardCount) {
     throw new Error(`Pool ${pool} has too few Characters`);
   }
-  const chosen = shuffle(available, random).slice(0, ROUND_LENGTH);
+  const chosen = shuffle(available, random).slice(0, cardCount);
   const cards = chosen.map((character): Card => {
     const wrong = shuffle(
       available.filter((c) => c.id !== character.id),
