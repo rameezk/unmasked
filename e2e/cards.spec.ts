@@ -138,3 +138,34 @@ test('a best saved before Cards were chosen shows as Cards 10', async ({ page })
   await expect(cards(page)).toHaveText('10');
   await expect(page.getByTestId('best-score')).toHaveText('7/10');
 });
+
+test('the Score fits inside its circle on a 100 Card Round', async ({ page }) => {
+  await page.goto('/?seed=1');
+  await page.getByLabel('Legend').check();
+  await chooseCards(page, '100');
+  await page.getByRole('button', { name: 'Play' }).click();
+  for (let i = 0; i < 100; i++) {
+    const character = await shownCharacterId(page);
+    if (i < 79) {
+      const names = await page.getByTestId('choice').allTextContents();
+      const wrong = names.map((n) => n.trim()).find((n) => n !== character.name)!;
+      await page.getByRole('button', { name: wrong, exact: true }).click();
+    }
+    await page.getByRole('button', { name: character.name, exact: true }).click();
+    await page.getByRole('button', { name: i === 99 ? 'Finish' : 'Next' }).click();
+  }
+  const score = page.getByTestId('score');
+  await expect(score).toHaveText('21/100');
+  await page.waitForTimeout(1000);
+  const { radius, reach } = await score.evaluate((el) => {
+    const box = el.getBoundingClientRect();
+    const range = document.createRange();
+    range.selectNodeContents(el);
+    const text = range.getBoundingClientRect();
+    return {
+      radius: box.width / 2,
+      reach: Math.hypot(text.width / 2, text.height / 2),
+    };
+  });
+  expect(reach).toBeLessThan(radius);
+});

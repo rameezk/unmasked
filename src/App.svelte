@@ -263,7 +263,10 @@
           ></i>
         {/each}
       </div>
-      <p class="score-burst" data-testid="score">{roundScore(round)}/{round.cards.length}</p>
+      <p class="score-burst" class:long={round.cards.length >= 100} data-testid="score">
+        {roundScore(round)}/{round.cards.length}
+      </p>
+      <button type="button" class="big primary" onclick={leaveRound}>Play again</button>
       <ul class="roster">
         {#each round.cards as c, i (c.character.id)}
           {@const guessed = c.scored === true}
@@ -275,7 +278,6 @@
           </li>
         {/each}
       </ul>
-      <button type="button" class="big primary" onclick={leaveRound}>Play again</button>
     </section>
   {/if}
 </main>
@@ -681,6 +683,9 @@
     border-radius: 50%;
     box-shadow: 6px 6px 0 var(--ink);
     animation: burst-pop var(--score-pop) cubic-bezier(0.2, 1.6, 0.4, 1);
+  }
+  .score-burst.long {
+    font-size: 3.25rem;
   }
   .roster {
     display: flex;
