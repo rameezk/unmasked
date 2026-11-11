@@ -33,11 +33,11 @@ A single Character shown to the player using one of its Pictures, waiting for a 
 _Avoid_: question, turn
 
 **Round**:
-A fixed sequence of Cards played as one game, currently ten.
+A sequence of Cards played as one game. The player chooses how many Cards on Start: 5, 10, 20, 30, 50, 75 or 100, up to the size of the Pool.
 _Avoid_: game, session, level
 
 **Start**:
-The screen where the player picks a Mode and Pool and begins a Round.
+The screen where the player picks a Mode, a Pool and how many Cards, and begins a Round.
 _Avoid_: home, menu
 
 **Alias**:
@@ -49,7 +49,7 @@ How the player answers a Card: Pick (choose from four names) or Type (type the n
 _Avoid_: easy mode, hard mode, difficulty
 
 **Score**:
-The number of Cards guessed correctly in a Round, shown out of the Round length (e.g. 7/10).
+The number of Cards guessed correctly in a Round, shown out of the number of Cards in the Round (e.g. 7/10).
 _Avoid_: stars, points
 
 **Missed**:
