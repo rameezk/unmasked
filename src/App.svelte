@@ -52,6 +52,8 @@
   }));
 
   const poolSize = $derived(poolCharacters(characters, pool).length);
+  const fewerCards = $derived(stepCards(cards, -1, poolSize));
+  const moreCards = $derived(stepCards(cards, 1, poolSize));
   const best = $derived.by(() => {
     void recorded;
     return saved.bestScore(mode, pool, cards);
@@ -174,16 +176,12 @@
       <fieldset class="panel">
         <legend>Cards</legend>
         <div class="stepper">
-          <button
-            type="button"
-            disabled={cards === stepCards(cards, -1, poolSize)}
-            onclick={() => (cards = stepCards(cards, -1, poolSize))}>−</button
+          <button type="button" disabled={cards === fewerCards} onclick={() => (cards = fewerCards)}
+            >−</button
           >
           <output data-testid="cards">{cards}</output>
-          <button
-            type="button"
-            disabled={cards === stepCards(cards, 1, poolSize)}
-            onclick={() => (cards = stepCards(cards, 1, poolSize))}>+</button
+          <button type="button" disabled={cards === moreCards} onclick={() => (cards = moreCards)}
+            >+</button
           >
         </div>
       </fieldset>
